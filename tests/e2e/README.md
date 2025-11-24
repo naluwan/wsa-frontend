@@ -113,66 +113,113 @@ npm run test:e2e:debug
 frontend/tests/e2e/
 ├── helpers/
 │   └── auth.ts                               # 認證輔助函數（dev 登入、登出）
-├── r1-auth-and-profile.spec.ts               # 身分認證與個人檔案測試
-├── r1-course-list-and-access.spec.ts         # 課程列表與存取權限測試
-├── r1-unit-completion-and-xp.spec.ts         # 單元完成與 XP 系統測試
-├── r1-leaderboard-and-sidebar.spec.ts        # 排行榜與 Sidebar 測試
+├── auth/
+│   └── login-dialog.spec.ts                  # 登入保護與對話框測試
+├── course/
+│   └── course-filter-and-sidebar.spec.ts    # 課程篩選與 Sidebar 連動測試
+├── leaderboard/
+│   └── ranking.spec.ts                       # 排行榜排名與顯示測試
+├── sidebar/
+│   └── sidebar-links.spec.ts                 # Sidebar 導航連結測試
+├── unit/
+│   └── unit-completion.spec.ts               # 單元頁與影片完成流程測試
 └── README.md                                  # 本說明文檔
 ```
 
 ### 📝 測試檔案詳細說明
 
-#### 1. `r1-auth-and-profile.spec.ts` - 身分認證與個人檔案
+#### 1. `auth/login-dialog.spec.ts` - 登入保護與對話框
 
-**測試數量**: 7 個測試
+**測試數量**: 5 個測試
 
 **測試內容**:
-- ✅ Dev 一鍵登入成功，Header 顯示使用者資訊
-- ✅ /api/auth/me API 回傳正確資料格式
-- ✅ 個人檔案頁顯示完整使用者資訊
-- ✅ 未登入時顯示登入提示
-- ✅ 登出功能正常運作
-- ✅ checkLoginStatus helper 函數測試
-- ✅ 多個種子使用者登入測試
+- ✅ 未登入時點擊「試聽課程」按鈕應顯示登入對話框
+- ✅ 未登入時點擊「立刻購買」按鈕應顯示登入對話框或導向登入頁
+- ✅ 登入對話框中的「前往登入」按鈕應正確導向登入頁
+- ✅ 未登入時直接訪問受保護的單元頁面應顯示登入提示
+- ✅ 未登入時訪問免費試看單元應該可以正常顯示
+
+**測試重點**: 前端登入保護機制、對話框 UI 互動
 
 **對應規格**: `docs/R1-Identity-And-Profile-Spec.md`
 
 ---
 
-#### 2. `r1-course-list-and-access.spec.ts` - 課程列表與存取權限
+#### 2. `course/course-filter-and-sidebar.spec.ts` - 課程篩選與 Sidebar 連動
 
-**測試數量**: 10 個測試
+**測試數量**: 9 個測試
 
 **測試內容**:
-- ✅ 未登入可以瀏覽課程列表
-- ✅ 未登入點擊單元會顯示登入提示
-- ✅ 已登入可以試看免費單元
-- ✅ 非免費單元顯示鎖定狀態
-- ✅ Mock 購買課程後所有單元解鎖
-- ✅ 課程列表顯示擁有狀態
-- ✅ GET /api/courses 回傳正確格式
-- ✅ GET /api/courses/{courseCode} 回傳正確格式
-- ✅ 未登入時所有單元 canAccess = false
-- ✅ 已登入未購買時只有免費單元可存取
+- ✅ 預設狀態下顯示所有課程
+- ✅ 可以透過課程選擇器切換課程
+- ✅ 切換課程後 URL 正確更新
+- ✅ 切換課程後 Sidebar 顯示對應課程的單元列表
+- ✅ URL 參數正確載入對應課程
+- ✅ 無效課程代碼時回退到預設狀態
+- ✅ Sidebar 中的課程單元可以點擊導航
+- ✅ 課程選擇狀態在不同頁面間保持
+- ✅ 免費試看單元有「試看」標記
+
+**測試重點**: 課程篩選邏輯、Sidebar 狀態連動、URL 同步
 
 **對應規格**: `docs/R1-Course-Unit-Access-And-Ownership-Spec.md`
 
 ---
 
-#### 3. `r1-unit-completion-and-xp.spec.ts` - 單元完成與 XP 系統
+#### 3. `leaderboard/ranking.spec.ts` - 排行榜排名與顯示
 
-**測試數量**: 9 個測試
+**測試數量**: 8 個測試
 
 **測試內容**:
-- ✅ 完成單元後 totalXp 和 weeklyXp 正確增加
-- ✅ /api/auth/me 回傳最新 XP
-- ✅ 等級根據 totalXp 正確計算
-- ✅ 完成單元可能導致升級
-- ✅ 不能重複完成同一個單元
-- ✅ 多個單元 XP 正確累積
-- ✅ 單元完成狀態正確更新
-- ✅ totalXp 和 weeklyXp 同步增加
-- ✅ 完成單元回傳格式正確
+- ✅ 排行榜頁面可以正常訪問
+- ✅ 總排行榜按 totalXp 正確排序
+- ✅ 本週排行榜按 weeklyXp 正確排序
+- ✅ 排行榜 Tab 切換功能正常
+- ✅ 排行榜顯示正確的名次和 XP 數字
+- ✅ 當前使用者的排名卡片固定在底部
+- ✅ 排行榜項目包含頭像、名稱、等級、XP
+- ✅ 完成單元後排行榜資料即時更新
+
+**測試重點**: 排行榜 UI 細節、Tab 切換、排序邏輯、即時更新
+
+**對應規格**: `docs/R1-Leaderboard-Spec.md`
+
+---
+
+#### 4. `sidebar/sidebar-links.spec.ts` - Sidebar 導航連結
+
+**測試數量**: 8 個測試
+
+**測試內容**:
+- ✅ 未登入狀態下 Sidebar 顯示基本導航連結
+- ✅ 登入後 Sidebar 顯示完整導航連結（包含個人檔案、排行榜等）
+- ✅ 點擊首頁連結導向正確頁面
+- ✅ 點擊課程連結導向正確頁面
+- ✅ 點擊排行榜連結導向正確頁面
+- ✅ 點擊個人檔案連結導向正確頁面（需登入）
+- ✅ Sidebar 連結有正確的 data-testid 屬性
+- ✅ 當前頁面的 Sidebar 連結有 active 狀態標記
+
+**測試重點**: Sidebar 導航功能、登入狀態判斷、active 狀態
+
+**對應規格**: `docs/R1-Identity-And-Profile-Spec.md`
+
+---
+
+#### 5. `unit/unit-completion.spec.ts` - 單元頁與影片完成流程
+
+**測試數量**: 7 個測試
+
+**測試內容**:
+- ✅ 開啟免費試看單元頁應顯示影片播放器
+- ✅ 影片播放器應有自訂控制列元素（播放、暫停、音量、全螢幕）
+- ✅ 完成單元後應更新 XP 和等級
+- ✅ 完成單元的 API 應該正確回傳更新後的資料
+- ✅ 已完成的單元應該顯示「已完成」標記
+- ✅ 未購買課程的付費單元應該無法完成
+- ✅ 影片播放器控制列的播放/暫停按鈕應該可以點擊
+
+**測試重點**: 影片播放器 UI、完成按鈕功能、XP 更新、完成狀態顯示
 
 **對應規格**: `docs/R1-Unit-And-XP-Spec.md`
 
@@ -189,25 +236,6 @@ Level 36: 65000 XP（最高等級）
 
 ---
 
-#### 4. `r1-leaderboard-and-sidebar.spec.ts` - 排行榜與 Sidebar
-
-**測試數量**: 9 個測試
-
-**測試內容**:
-- ✅ 可以訪問排行榜頁面
-- ✅ GET /api/leaderboard/total 回傳正確資料
-- ✅ GET /api/leaderboard/weekly 回傳正確資料
-- ✅ 排行榜頁面顯示使用者列表
-- ✅ 完成單元後排行榜更新
-- ✅ Sidebar 顯示導航連結
-- ✅ Sidebar 導航功能正常
-- ✅ 排行榜 Tab 切換功能
-- ✅ 排行榜排名顯示
-
-**對應規格**: `docs/R1-Leaderboard-Spec.md`
-
----
-
 ## 測試命令
 
 ### 基本命令
@@ -217,10 +245,13 @@ Level 36: 65000 XP（最高等級）
 npm run test:e2e
 
 # 執行特定測試檔案
-npx playwright test r1-auth-and-profile.spec.ts
+npx playwright test auth/login-dialog.spec.ts
+
+# 執行特定資料夾的測試
+npx playwright test tests/e2e/unit/
 
 # 執行特定測試（使用 grep）
-npx playwright test --grep "Dev 一鍵登入"
+npx playwright test --grep "登入對話框"
 
 # 顯示瀏覽器視窗執行
 npm run test:e2e:headed
