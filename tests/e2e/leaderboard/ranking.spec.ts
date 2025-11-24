@@ -36,6 +36,22 @@ test.describe('Leaderboard: 排名驗證', () => {
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
 
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 排行榜數據載入超時');
+      });
+
       // Then: 應該看到排行榜表格
       console.log('[Then] 驗證排行榜表格存在');
       const leaderboardRows = page.locator('[data-testid="leaderboard-row"]');
@@ -56,6 +72,22 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log('[When] 訪問排行榜頁面');
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 排行榜數據載入超時');
+      });
 
       // Then: 驗證第一個排行榜行包含所有必要欄位
       console.log('[Then] 驗證排行榜欄位信息');
@@ -99,6 +131,22 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log('[When] 訪問排行榜頁面 - 學習排行榜');
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 排行榜數據載入超時');
+      });
 
       // 確保在總排行榜 Tab
       const totalTab = page.locator('[data-testid="leaderboard-tab-total"]');
@@ -152,6 +200,22 @@ test.describe('Leaderboard: 排名驗證', () => {
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
 
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 排行榜數據載入超時');
+      });
+
       const leaderboardRows = page.locator('[data-testid="leaderboard-row"]');
       let user1Rank = null;
 
@@ -181,6 +245,22 @@ test.describe('Leaderboard: 排名驗證', () => {
       // 重新訪問排行榜
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 排行榜數據載入超時');
+      });
 
       const leaderboardRows2 = page.locator('[data-testid="leaderboard-row"]');
       let user2Rank = null;
@@ -220,6 +300,14 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log('[And] 訪問排行榜頁面');
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
 
       // When: 我點擊「學習排行榜」Tab
       console.log('[When] 點擊「學習排行榜」Tab');
@@ -276,6 +364,14 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log('[When] 訪問排行榜頁面');
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
 
       // And: 我點擊「本週成長榜」Tab
       console.log('[And] 點擊「本週成長榜」Tab');
@@ -336,6 +432,14 @@ test.describe('Leaderboard: 排名驗證', () => {
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
 
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
+
       // Then: 應該看到當前使用者的排名卡片（藍色高亮）
       console.log('[Then] 驗證當前使用者排名卡片');
       const currentUserCard = page.locator('[data-testid="current-user-leaderboard-card"]');
@@ -365,6 +469,14 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log('[When] 訪問排行榜頁面');
       await page.goto('/leaderboard');
       await page.waitForLoadState('load');
+
+      // And: 等待排行榜數據載入完成
+      await page.waitForSelector('[data-testid="leaderboard-row"], [data-testid="leaderboard-tab-total"]', {
+        timeout: 10000,
+        state: "visible"
+      }).catch(() => {
+        console.log("[Test] ⚠️ 排行榜數據載入超時");
+      });
 
       // Then: 驗證當前使用者卡片的 XP 與登入時資料一致
       console.log('[Then] 驗證當前使用者卡片數據');
