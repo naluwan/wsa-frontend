@@ -424,26 +424,31 @@ export default function JourneyPlayerPage() {
         </main>
       </div>
 
-      {/* 登入提示 Dialog */}
-      <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <AlertDialogContent data-testid="login-prompt-dialog">
+      {/* 登入提示 Dialog（不可關閉）*/}
+      <AlertDialog open={showLoginDialog} onOpenChange={() => {}}>
+        <AlertDialogContent
+          data-testid="login-prompt-dialog"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
               完成登入並擁有完整課程體驗，包含觀看進度記錄、完成單元獲得 XP、參與排行榜等功能！
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>稍後再說</AlertDialogCancel>
-            <AlertDialogAction
+          <AlertDialogFooter className="sm:justify-center">
+            <Button
               onClick={() => {
                 const currentPath = window.location.pathname
                 router.push(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
               }}
-              className="bg-yellow-600 hover:bg-yellow-700 text-black"
+              className="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold px-8"
+              size="lg"
+              data-testid="goto-login-button"
             >
               前往登入
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

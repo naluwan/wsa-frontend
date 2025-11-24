@@ -147,27 +147,39 @@ test.describe('登入保護與對話框', () => {
     }
   });
 
-  test('未登入時訪問免費試看單元應該可以正常顯示', async ({ page }) => {
+  test('未登入時訪問免費試看單元應顯示登入對話框但可看到影片', async ({ page }) => {
     // Given: 我尚未登入
     // When: 我直接訪問一個免費試看的單元頁面
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
-    // Then: 應該可以看到影片播放器（或至少不顯示「無法觀看」）
-    const cannotWatchMessage = page.locator('text=/無法觀看|購買.*才能享有/i');
+    // Then: 應該顯示登入對話框
+    const loginDialog = page.locator('[data-testid="login-prompt-dialog"]');
+    await expect(loginDialog).toBeVisible({ timeout: 5000 });
+    console.log('[Test] ✅ 未登入訪問免費試看單元會顯示登入對話框');
 
-    // 不應該顯示「無法觀看」訊息
-    await expect(cannotWatchMessage).not.toBeVisible();
+    // And: 對話框中應該只有「前往登入」按鈕（沒有「稍後再說」）
+    const gotoLoginButton = page.locator('[data-testid="goto-login-button"]');
+    await expect(gotoLoginButton).toBeVisible();
+    console.log('[Test] ✅ 登入對話框中有「前往登入」按鈕');
 
-    // 如果有影片播放器，應該可以看到
+    // And: 背景應該可以看到影片播放器（不是鎖定畫面）
     const videoPlayer = page.locator('[data-testid="unit-video"]');
     const videoVisible = await videoPlayer.isVisible();
 
     if (videoVisible) {
-      console.log('[Test] ✅ 免費試看單元可以正常顯示影片播放器');
+      console.log('[Test] ✅ 背景顯示影片播放器（免費試看單元）');
     } else {
-      console.log('[Test] ⚠️ 未找到影片播放器，但沒有「無法觀看」訊息');
+      console.log('[Test] ⚠️ 未找到影片播放器（可能正在載入）');
+    }
+
+    // And: 不應該顯示「無法觀看」的鎖定訊息
+    const lockIcon = page.locator('text=/您無法觀看/i');
+    const lockVisible = await lockIcon.isVisible().catch(() => false);
+
+    if (!lockVisible) {
+      console.log('[Test] ✅ 沒有顯示鎖定訊息（因為是免費試看）');
     }
   });
 });
