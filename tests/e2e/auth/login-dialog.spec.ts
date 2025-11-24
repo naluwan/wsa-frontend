@@ -20,7 +20,7 @@ test.describe('登入保護與對話框', () => {
     // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
-    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
 
     // And: 等待課程卡片或課程資料載入完成
     await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
@@ -29,6 +29,10 @@ test.describe('登入保護與對話框', () => {
     }).catch(() => {
       console.log('[Test] ⚠️ 課程資料載入超時');
     });
+
+    // And: 等待登入狀態檢查完成（等待所有 API 請求完成）
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500); // 額外等待 React 狀態更新
 
     // And: 我點擊第一個有試聽課程的按鈕
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();
@@ -57,7 +61,7 @@ test.describe('登入保護與對話框', () => {
     // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
-    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
 
     // And: 等待課程卡片或課程資料載入完成
     await page.waitForSelector('[data-testid="course-card"], [data-testid="purchase-course-button"]', {
@@ -66,6 +70,10 @@ test.describe('登入保護與對話框', () => {
     }).catch(() => {
       console.log('[Test] ⚠️ 課程資料載入超時');
     });
+
+    // And: 等待登入狀態檢查完成
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // And: 我點擊第一個「立刻購買」按鈕
     const purchaseButton = page.locator('[data-testid="purchase-course-button"]').first();
@@ -97,7 +105,7 @@ test.describe('登入保護與對話框', () => {
     // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
-    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
 
     // And: 等待課程卡片或課程資料載入完成
     await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
@@ -106,6 +114,10 @@ test.describe('登入保護與對話框', () => {
     }).catch(() => {
       console.log('[Test] ⚠️ 課程資料載入超時');
     });
+
+    // And: 等待登入狀態檢查完成
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // And: 我點擊試聽課程按鈕觸發登入對話框
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();
@@ -142,7 +154,8 @@ test.describe('登入保護與對話框', () => {
     // 注意：這裡需要知道一個付費單元的 unitId
     // 根據種子資料，sdp-platform-user-manual 是付費單元
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-platform-user-manual');
-    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // Then: 應該顯示「無法觀看」訊息或登入提示
     const cannotWatchMessage = page.locator('text=/無法觀看|購買.*才能享有|請先登入/i');
@@ -167,7 +180,8 @@ test.describe('登入保護與對話框', () => {
     // When: 我直接訪問一個免費試看的單元頁面
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
 
     // Then: 應該顯示登入對話框
     const loginDialog = page.locator('[data-testid="login-prompt-dialog"]');
