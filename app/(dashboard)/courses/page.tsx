@@ -300,6 +300,7 @@ export default function CoursesPage() {
                             }}
                             className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black"
                             size="lg"
+                            data-testid="preview-course-button"
                           >
                             試聽課程
                           </Button>
@@ -309,6 +310,7 @@ export default function CoursesPage() {
                             className="flex-1 bg-muted text-muted-foreground cursor-not-allowed"
                             size="lg"
                             onClick={(e) => e.stopPropagation()}
+                            data-testid="paid-only-button"
                           >
                             僅限付費
                           </Button>
@@ -324,6 +326,7 @@ export default function CoursesPage() {
                             className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
                             size="lg"
                             variant="outline"
+                            data-testid="enter-course-button"
                           >
                             進入課程
                           </Button>
@@ -336,6 +339,7 @@ export default function CoursesPage() {
                             className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
                             size="lg"
                             variant="outline"
+                            data-testid="purchase-course-button"
                           >
                             立刻購買
                           </Button>
@@ -371,7 +375,7 @@ export default function CoursesPage() {
 
       {/* 登入提示對話框 */}
       <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent className="sm:max-w-md" data-testid="login-prompt-dialog">
           <button
             onClick={() => setShowLoginDialog(false)}
             className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
@@ -392,6 +396,7 @@ export default function CoursesPage() {
               onClick={handleLoginClick}
               className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8"
               size="lg"
+              data-testid="goto-login-button"
             >
               前往登入
             </Button>

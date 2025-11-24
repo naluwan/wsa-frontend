@@ -403,6 +403,7 @@ export function SiteHeader() {
                   className="relative h-10 w-10 rounded-full cursor-pointer"
                   onMouseEnter={() => setIsDropdownOpen(true)}
                   onMouseLeave={() => setIsDropdownOpen(false)}
+                  data-testid="user-avatar-button"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || "使用者"} />
@@ -417,6 +418,7 @@ export function SiteHeader() {
                 className="w-80"
                 onMouseEnter={() => setIsDropdownOpen(true)}
                 onMouseLeave={() => setIsDropdownOpen(false)}
+                data-testid="user-dropdown-menu"
               >
                 {/* 使用者資訊卡片 */}
                 <div className="flex flex-col gap-3 p-4">
@@ -429,20 +431,20 @@ export function SiteHeader() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col flex-1">
-                      <p className="font-semibold text-base">
+                      <p className="font-semibold text-base" data-testid="user-display-name">
                         {user.displayName || "使用者"}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground" data-testid="user-level">
                         Lv. {user.level}
                       </p>
                     </div>
                   </div>
 
                   {/* 經驗值資訊 */}
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-testid="user-xp-section">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">經驗值</span>
-                      <span className="font-medium">
+                      <span className="font-medium" data-testid="user-xp-display">
                         {(() => {
                           const currentLevel = user.level;
                           const currentTotalXp = user.totalXp;
@@ -479,7 +481,7 @@ export function SiteHeader() {
                         }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground" data-testid="user-weekly-xp">
                       本週獲得 {user.weeklyXp} XP
                     </p>
                   </div>
@@ -490,7 +492,7 @@ export function SiteHeader() {
                 {/* 選單項目 */}
                 <div className="py-1">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer px-4 py-2">
+                    <Link href="/profile" className="cursor-pointer px-4 py-2" data-testid="profile-link">
                       <User className="mr-2 h-4 w-4" />
                       個人檔案
                     </Link>
@@ -499,6 +501,7 @@ export function SiteHeader() {
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     onSelect={(e) => e.preventDefault()}
                     className="cursor-pointer px-4 py-2"
+                    data-testid="theme-toggle-button"
                   >
                     {mounted && theme === "dark" ? (
                       <Moon className="mr-2 h-4 w-4" />
@@ -508,7 +511,7 @@ export function SiteHeader() {
                     切換主題
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/invite" className="cursor-pointer px-4 py-2">
+                    <Link href="/invite" className="cursor-pointer px-4 py-2" data-testid="invite-link">
                       <Users className="mr-2 h-4 w-4" />
                       邀請好友
                     </Link>
@@ -517,6 +520,7 @@ export function SiteHeader() {
                     onClick={handleReset}
                     onSelect={(e) => e.preventDefault()}
                     className="cursor-pointer px-4 py-2"
+                    data-testid="reset-data-button"
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     重置資料
@@ -530,6 +534,7 @@ export function SiteHeader() {
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer px-4 py-2"
+                    data-testid="logout-button"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     登出

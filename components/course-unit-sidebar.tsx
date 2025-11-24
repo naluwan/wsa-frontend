@@ -193,13 +193,16 @@ const SidebarContent = React.memo(({
                                   ? "bg-yellow-600 text-white"
                                   : "hover:bg-muted"
                               )}
+                              data-testid="unit-list-item"
                             >
                               {renderUnitIcon(unit)}
                               <div className="flex-1 min-w-0">
                                 <p className={cn(
                                   "text-xs line-clamp-2",
                                   isActive ? "font-semibold" : ""
-                                )}>
+                                )}
+                                data-testid="unit-title"
+                                >
                                   {unit.title}
                                 </p>
                                 <div className="flex gap-1 mt-1">
@@ -207,6 +210,7 @@ const SidebarContent = React.memo(({
                                     <Badge
                                       variant="secondary"
                                       className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px] px-1 py-0"
+                                      data-testid="free-preview-badge"
                                     >
                                       試看
                                     </Badge>
@@ -215,6 +219,7 @@ const SidebarContent = React.memo(({
                                     <Badge
                                       variant="secondary"
                                       className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-[10px] px-1 py-0"
+                                      data-testid="completed-badge"
                                     >
                                       已完成
                                     </Badge>
@@ -246,6 +251,7 @@ const SidebarContent = React.memo(({
                             : "hover:bg-muted"
                         )}
                         title={unit.title}
+                        data-testid="unit-list-item-collapsed"
                       >
                         {renderUnitIcon(unit)}
                       </button>

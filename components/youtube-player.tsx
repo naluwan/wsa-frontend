@@ -241,6 +241,7 @@ function YoutubePlayerComponent({
             value={currentTime}
             onChange={(e) => handleSeek(Number(e.target.value))}
             className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-600"
+            data-testid="video-progress-bar"
           />
           <div className="flex justify-between text-xs text-white mt-1">
             <span>{Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</span>
@@ -254,6 +255,7 @@ function YoutubePlayerComponent({
           <button
             onClick={handlePlayPause}
             className="text-white hover:text-yellow-600 transition-colors"
+            data-testid="video-play-pause-button"
           >
             {isPlaying ? (
               <Pause className="h-6 w-6" />
@@ -267,6 +269,7 @@ function YoutubePlayerComponent({
             <button
               onClick={handleVolumeToggle}
               className="text-white hover:text-yellow-600 transition-colors"
+              data-testid="video-volume-button"
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5" />
@@ -281,6 +284,7 @@ function YoutubePlayerComponent({
               value={isMuted ? 0 : volume}
               onChange={(e) => handleVolumeChange(Number(e.target.value))}
               className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-600"
+              data-testid="video-volume-slider"
             />
           </div>
 
@@ -290,6 +294,7 @@ function YoutubePlayerComponent({
           <button
             onClick={handleFullscreen}
             className="text-white hover:text-yellow-600 transition-colors"
+            data-testid="video-fullscreen-button"
           >
             {isFullscreen ? (
               <Minimize className="h-5 w-5" />

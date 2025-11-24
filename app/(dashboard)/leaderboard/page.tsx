@@ -153,10 +153,10 @@ function LeaderboardTable({
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.userId}>
+              <TableRow key={user.userId} data-testid="leaderboard-row">
                 {/* 排名 */}
                 <TableCell className="font-medium">
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center" data-testid="leaderboard-rank">
                     {getRankIcon(user.rank)}
                   </div>
                 </TableCell>
@@ -164,29 +164,29 @@ function LeaderboardTable({
                 {/* 使用者資訊 */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-10 w-10" data-testid="leaderboard-avatar">
                       <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName} />
                       <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">{user.displayName}</span>
+                    <span className="font-medium" data-testid="leaderboard-display-name">{user.displayName}</span>
                   </div>
                 </TableCell>
 
                 {/* 等級 */}
                 <TableCell className="text-center">
-                  <Badge variant={getLevelColor(user.level)}>
+                  <Badge variant={getLevelColor(user.level)} data-testid="leaderboard-level">
                     Lv {user.level}
                   </Badge>
                 </TableCell>
 
                 {/* 總 XP */}
-                <TableCell className="text-right font-medium">
+                <TableCell className="text-right font-medium" data-testid="leaderboard-total-xp">
                   {user.totalXp.toLocaleString()}
                 </TableCell>
 
                 {/* 本週 XP */}
                 {showWeeklyXp && (
-                  <TableCell className="text-right font-medium text-primary">
+                  <TableCell className="text-right font-medium text-primary" data-testid="leaderboard-weekly-xp">
                     +{user.weeklyXp.toLocaleString()}
                   </TableCell>
                 )}
@@ -213,7 +213,7 @@ function LeaderboardTable({
 
       {/* 當前使用者排名（固定在底部，藍色高亮） */}
       {currentUser && (
-        <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+        <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950/20" data-testid="current-user-leaderboard-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1">
@@ -423,8 +423,8 @@ export default function LeaderboardPage() {
           <Tabs defaultValue="total" className="max-w-5xl mx-auto">
             {/* Tab 選單 */}
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="total">學習排行榜</TabsTrigger>
-              <TabsTrigger value="weekly">本週成長榜</TabsTrigger>
+              <TabsTrigger value="total" data-testid="leaderboard-tab-total">學習排行榜</TabsTrigger>
+              <TabsTrigger value="weekly" data-testid="leaderboard-tab-weekly">本週成長榜</TabsTrigger>
             </TabsList>
 
             {/* 學習排行榜（總 XP） */}
