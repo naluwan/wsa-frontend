@@ -111,13 +111,20 @@ export default function JourneyPlayerPage() {
 
         if (res.ok) {
           const data = await res.json()
-          setIsLoggedIn(!!data.user)
-          console.log('[JourneyPlayerPage] 登入狀態:', !!data.user)
+          const loggedIn = !!data.user
+          setIsLoggedIn(loggedIn)
+
+          // 如果未登入，顯示登入對話框
+          if (!loggedIn) {
+            setShowLoginDialog(true)
+            console.log('[JourneyPlayerPage] 未登入，顯示登入對話框')
+          } else {
+            console.log('[JourneyPlayerPage] 已登入:', data.user.displayName)
+          }
         } else {
           setIsLoggedIn(false)
-          // 未登入時顯示登入對話框
           setShowLoginDialog(true)
-          console.log('[JourneyPlayerPage] 未登入，顯示登入對話框')
+          console.log('[JourneyPlayerPage] API 回應錯誤，顯示登入對話框')
         }
       } catch (error) {
         console.error('[JourneyPlayerPage] 檢查登入狀態失敗:', error)
