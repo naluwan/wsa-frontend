@@ -95,7 +95,6 @@ jobs:
           heroku_app_name: ${{ secrets.HEROKU_APP_NAME_FRONTEND }}
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           usedocker: false
-          buildpack: heroku/nodejs
 
       - name: Verify deployment
         run: |
