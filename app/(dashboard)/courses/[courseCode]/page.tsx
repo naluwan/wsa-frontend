@@ -13,10 +13,9 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Circle, PlayCircle, Lock } from "lucide-react"
+import { ArrowLeft, BookOpen } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Accordion,
@@ -25,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { PurchaseButton } from "./purchase-button"
+import { UnitCard } from "./unit-card"
 
 // 強制此頁面為動態路由，不要快取
 export const dynamic = 'force-dynamic';
@@ -107,18 +107,6 @@ function getLevelVariant(levelTag: string): "default" | "secondary" | "destructi
 }
 
 /**
- * 根據單元類型取得圖示
- */
-function getUnitIcon(type: string) {
-  switch (type) {
-    case "video":
-      return PlayCircle;
-    default:
-      return BookOpen;
-  }
-}
-
-/**
  * 從後端 API 獲取課程詳情
  * Server Component 直接呼叫後端，不經過前端 API Route
  */
@@ -175,6 +163,11 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
   const { course, sections } = data;
   const levelText = getLevelText(course.levelTag);
+
+  // 檢查使用者是否已登入（從 cookies 取得 token）
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const isLoggedIn = !!token;
 
   // 計算完成進度（統計所有章節中的單元）
   const allUnits = sections.flatMap(section => section.units);
@@ -260,75 +253,13 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3 pt-4">
-                      {section.units.map((unit) => {
-                        const UnitIcon = getUnitIcon(unit.type);
-
-                        return (
-                          <Card
-                            key={unit.id}
-                            className={`transition-shadow ${!unit.canAccess ? 'bg-muted/30' : 'hover:shadow-md'}`}
-                            data-testid="unit-card"
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-start gap-3 flex-1">
-                                  {/* 完成狀態圖示 */}
-                                  {unit.isCompleted ? (
-                                    <CheckCircle2 className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                                  ) : unit.canAccess ? (
-                                    <Circle className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
-                                  ) : (
-                                    <Lock className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
-                                  )}
-
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                      <UnitIcon className="h-4 w-4 text-muted-foreground" />
-                                      <span className="text-xs text-muted-foreground uppercase">
-                                        {unit.type === "video" ? "影片" : unit.type}
-                                      </span>
-                                      {unit.isFreePreview && (
-                                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs">
-                                          免費試看
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <CardTitle
-                                      className={`text-lg ${!unit.canAccess ? 'text-muted-foreground' : ''}`}
-                                      data-testid="unit-title"
-                                    >
-                                      {unit.title}
-                                    </CardTitle>
-                                  </div>
-                                </div>
-
-                                {unit.canAccess ? (
-                                  <Button
-                                    asChild
-                                    variant={unit.isCompleted ? "outline" : "default"}
-                                    data-testid="enter-unit-button"
-                                  >
-                                    <Link href={`/units/${unit.unitId}`}>
-                                      {unit.isCompleted ? "重新觀看" : "開始學習"}
-                                      <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Link>
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    disabled
-                                    className="cursor-not-allowed"
-                                    data-testid="locked-unit-button"
-                                  >
-                                    <Lock className="mr-2 h-4 w-4" />
-                                    已鎖定
-                                  </Button>
-                                )}
-                              </div>
-                            </CardHeader>
-                          </Card>
-                        )
-                      })}
+                      {section.units.map((unit) => (
+                        <UnitCard
+                          key={unit.id}
+                          unit={unit}
+                          isLoggedIn={isLoggedIn}
+                        />
+                      ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>

@@ -32,6 +32,8 @@ export function PurchaseButton({ courseCode, courseTitle }: PurchaseButtonProps)
     try {
       setIsPurchasing(true)
 
+      console.log("[PurchaseButton] 開始購買課程:", courseCode)
+
       const res = await fetch(`/api/courses/${courseCode}/purchase`, {
         method: "POST",
         headers: {
@@ -39,8 +41,11 @@ export function PurchaseButton({ courseCode, courseTitle }: PurchaseButtonProps)
         },
       })
 
+      console.log("[PurchaseButton] API 回應狀態:", res.status)
+
       // 若未登入，顯示登入提示對話框
       if (res.status === 401) {
+        console.log("[PurchaseButton] 未登入，顯示登入對話框")
         setShowLoginDialog(true)
         return
       }
@@ -92,7 +97,6 @@ export function PurchaseButton({ courseCode, courseTitle }: PurchaseButtonProps)
       <LoginDialog
         open={showLoginDialog}
         onOpenChange={setShowLoginDialog}
-        courseTitle={courseTitle}
       />
     </>
   )

@@ -17,12 +17,21 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { FileText } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { FileText, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useCourse } from "@/contexts/course-context"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 /**
  * 課程資料型別（對應後端 CourseDto）
@@ -66,10 +75,14 @@ function getCourseDisplayConfig(courseCode: string) {
 }
 
 export default function CoursesPage() {
+  const router = useRouter()
   const { currentCourse, setCurrentCourse } = useCourse()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, string>>({})
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [loginReturnUrl, setLoginReturnUrl] = useState<string>("")
 
   // 從 API 獲取課程資料
   useEffect(() => {
@@ -110,6 +123,26 @@ export default function CoursesPage() {
     fetchCourses()
   }, [])
 
+  // 檢查登入狀態
+  useEffect(() => {
+    async function checkLoginStatus() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include',
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setIsLoggedIn(!!data.user)
+          console.log('[CoursesPage] 登入狀態:', !!data.user)
+        }
+      } catch (error) {
+        console.error('[CoursesPage] 檢查登入狀態失敗:', error)
+        setIsLoggedIn(false)
+      }
+    }
+    checkLoginStatus()
+  }, [])
+
   // 處理課程卡片點擊
   const handleCourseClick = (course: Course) => {
     // 更新 context 中的當前課程
@@ -119,6 +152,56 @@ export default function CoursesPage() {
       code: course.code,
     }
     setCurrentCourse(courseInContext)
+  }
+
+  /**
+   * 處理「試聽課程」按鈕點擊
+   */
+  const handlePreviewClick = (course: Course) => {
+    const targetUrl = firstFreeUnits[course.code]
+      ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
+      : `/courses/${course.code}`
+
+    console.log('[CoursesPage] 點擊試聽課程:', {
+      courseCode: course.code,
+      targetUrl,
+      isLoggedIn,
+    })
+
+    // 如果未登入，顯示登入對話框
+    if (!isLoggedIn) {
+      console.log('[CoursesPage] 未登入，顯示登入對話框')
+      setLoginReturnUrl(targetUrl)
+      setShowLoginDialog(true)
+      return
+    }
+
+    // 如果已登入，直接導向
+    router.push(targetUrl)
+  }
+
+  /**
+   * 處理「立刻購買」按鈕點擊
+   */
+  const handlePurchaseClick = (course: Course) => {
+    const targetUrl = `/courses/${course.code}`
+
+    console.log('[CoursesPage] 點擊立刻購買:', {
+      courseCode: course.code,
+      targetUrl,
+      isLoggedIn,
+    })
+
+    // 直接導向課程詳情頁（購買邏輯在課程詳情頁處理）
+    router.push(targetUrl)
+  }
+
+  /**
+   * 處理登入對話框的「前往登入」按鈕
+   */
+  const handleLoginClick = () => {
+    console.log('[CoursesPage] 導向登入頁，returnUrl:', loginReturnUrl)
+    router.push(`/login?returnUrl=${encodeURIComponent(loginReturnUrl)}`)
   }
 
   return (
@@ -211,18 +294,14 @@ export default function CoursesPage() {
                         {/* 試聽課程按鈕 / 僅限付費按鈕 */}
                         {course.hasFreePreview ? (
                           <Button
-                            asChild
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handlePreviewClick(course)
+                            }}
                             className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black"
                             size="lg"
-                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Link href={
-                              firstFreeUnits[course.code]
-                                ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
-                                : `/courses/${course.code}`
-                            }>
-                              試聽課程
-                            </Link>
+                            試聽課程
                           </Button>
                         ) : (
                           <Button
@@ -238,27 +317,27 @@ export default function CoursesPage() {
                         {/* 立刻購買按鈕 / 進入課程按鈕 */}
                         {course.isOwned ? (
                           <Button
-                            asChild
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/courses/${course.code}`)
+                            }}
                             className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
                             size="lg"
                             variant="outline"
-                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Link href={`/courses/${course.code}`}>
-                              進入課程
-                            </Link>
+                            進入課程
                           </Button>
                         ) : (
                           <Button
-                            asChild
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handlePurchaseClick(course)
+                            }}
                             className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
                             size="lg"
                             variant="outline"
-                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Link href={`/courses/${course.code}`}>
-                              立刻購買
-                            </Link>
+                            立刻購買
                           </Button>
                         )}
                       </div>
@@ -289,6 +368,36 @@ export default function CoursesPage() {
           </Card>
         </div>
       </section>
+
+      {/* 登入提示對話框 */}
+      <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <button
+            onClick={() => setShowLoginDialog(false)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">關閉</span>
+          </button>
+
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              完成登入並擁有完整課程影片，就可以立即觀課程囉！
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="sm:justify-center">
+            <Button
+              onClick={handleLoginClick}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8"
+              size="lg"
+            >
+              前往登入
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

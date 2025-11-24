@@ -16,6 +16,10 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
+  const state = searchParams.get("state");  // 取得 returnUrl（從 state 參數）
+
+  // 解碼 returnUrl，預設為首頁
+  const returnUrl = state ? decodeURIComponent(state) : "/";
 
   // 檢查是否有授權碼，若沒有則導回登入頁
   if (!code) {
@@ -102,10 +106,11 @@ export async function GET(request: NextRequest) {
       path: "/",
     });
 
-    // 步驟 5: 登入成功，導向首頁
+    // 步驟 5: 登入成功，導向 returnUrl 或首頁
     // 強制使用 localhost:3000 避免跳轉到容器內部主機名
     // 使用 303 重定向確保瀏覽器完全重新載入頁面
-    const response = NextResponse.redirect("http://localhost:3000/", 303);
+    const redirectUrl = `http://localhost:3000${returnUrl}`;
+    const response = NextResponse.redirect(redirectUrl, 303);
     return response;
   } catch (error) {
     // 若發生任何錯誤，導回登入頁並顯示錯誤訊息

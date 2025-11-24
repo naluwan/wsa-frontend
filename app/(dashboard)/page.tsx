@@ -11,6 +11,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { ArrowRight, Trophy, Sword, TrendingUp, BookOpen, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCourse, AVAILABLE_COURSES } from "@/contexts/course-context"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { X } from "lucide-react"
 
 // 課程資料型別
 interface Course {
@@ -113,10 +123,14 @@ const infoCards: InfoCard[] = [
 ]
 
 export default function HomePage() {
+  const router = useRouter()
   const { currentCourse, setCurrentCourse } = useCourse()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, string>>({})
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [loginReturnUrl, setLoginReturnUrl] = useState<string>("")
 
   // 從 API 獲取課程資料
   useEffect(() => {
@@ -155,6 +169,26 @@ export default function HomePage() {
       }
     }
     fetchCourses()
+  }, [])
+
+  // 檢查登入狀態
+  useEffect(() => {
+    async function checkLoginStatus() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include',
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setIsLoggedIn(!!data.user)
+          console.log('[HomePage] 登入狀態:', !!data.user)
+        }
+      } catch (error) {
+        console.error('[HomePage] 檢查登入狀態失敗:', error)
+        setIsLoggedIn(false)
+      }
+    }
+    checkLoginStatus()
   }, [])
 
   // 判斷是否顯示提示條（只有軟體設計模式精通之旅才顯示）
@@ -198,6 +232,48 @@ export default function HomePage() {
           buttonText: '立即體驗',
         }
     }
+  }
+
+  /**
+   * 處理課程按鈕點擊（試聽課程或購買課程）
+   * 如果未登入，顯示登入對話框
+   * 如果已登入，導向對應頁面
+   */
+  const handleCourseButtonClick = (course: Course, displayConfig: any) => {
+    console.log('[HomePage] 點擊課程按鈕:', {
+      courseCode: course.code,
+      buttonText: displayConfig.buttonText,
+      isLoggedIn,
+      hasFreePreview: course.hasFreePreview,
+    })
+
+    // 決定目標 URL
+    const targetUrl =
+      course.hasFreePreview && displayConfig.buttonText === '立即體驗' && firstFreeUnits[course.code]
+        ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
+        : `/courses/${course.code}`
+
+    console.log('[HomePage] 目標 URL:', targetUrl)
+
+    // 如果未登入，顯示登入對話框
+    if (!isLoggedIn) {
+      console.log('[HomePage] 未登入，顯示登入對話框')
+      setLoginReturnUrl(targetUrl)
+      setShowLoginDialog(true)
+      return
+    }
+
+    // 如果已登入，直接導向
+    console.log('[HomePage] 已登入，導向目標頁面')
+    router.push(targetUrl)
+  }
+
+  /**
+   * 處理登入對話框的「前往登入」按鈕
+   */
+  const handleLoginClick = () => {
+    console.log('[HomePage] 導向登入頁，returnUrl:', loginReturnUrl)
+    router.push(`/login?returnUrl=${encodeURIComponent(loginReturnUrl)}`)
   }
 
   return (
@@ -287,7 +363,10 @@ export default function HomePage() {
                             </p>
                           )}
                           <Button
-                            asChild
+                            onClick={(e) => {
+                              e.stopPropagation() // 防止觸發卡片的點擊事件
+                              handleCourseButtonClick(course, displayConfig)
+                            }}
                             className={
                               isSelected
                                 ? 'w-full border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent'
@@ -296,16 +375,7 @@ export default function HomePage() {
                             size="lg"
                             variant={isSelected ? 'outline' : 'default'}
                           >
-                            <Link
-                              href={
-                                course.hasFreePreview && displayConfig.buttonText === '立即體驗' && firstFreeUnits[course.code]
-                                  ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
-                                  : `/courses/${course.code}`
-                              }
-                              className="inline-flex items-center justify-center w-full h-full"
-                            >
-                              {displayConfig.buttonText}
-                            </Link>
+                            {displayConfig.buttonText}
                           </Button>
                         </CardFooter>
                       </Card>
@@ -441,6 +511,36 @@ export default function HomePage() {
           </Card>
         </div>
       </section>
+
+      {/* 登入提示對話框 */}
+      <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <button
+            onClick={() => setShowLoginDialog(false)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">關閉</span>
+          </button>
+
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              完成登入並擁有完整課程影片，就可以立即觀課程囉！
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="sm:justify-center">
+            <Button
+              onClick={handleLoginClick}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8"
+              size="lg"
+            >
+              前往登入
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

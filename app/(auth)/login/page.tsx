@@ -19,6 +19,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -40,6 +41,8 @@ interface UserData {
 }
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get("returnUrl") || "/"  // 取得返回 URL，預設為首頁
   const [user, setUser] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -77,12 +80,12 @@ export default function LoginPage() {
    * 建立 Google OAuth 授權 URL 並導向
    */
   const handleGoogleLogin = () => {
-    // OAuth Redirect URI
-    // 開發環境：localhost:3000
-    // 生產環境：應該使用環境變數或當前 origin
-    const redirectUri = process.env.NEXT_PUBLIC_APP_URL
+    // OAuth Redirect URI，需要包含 returnUrl 以便登入後返回
+    const baseRedirectUri = process.env.NEXT_PUBLIC_APP_URL
       ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
       : "http://localhost:3000/api/auth/google/callback";
+
+    const redirectUri = `${baseRedirectUri}?returnUrl=${encodeURIComponent(returnUrl)}`;
 
     // 建立 Google OAuth 授權 URL
     const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -90,9 +93,10 @@ export default function LoginPage() {
       "client_id",
       process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""
     );
-    googleAuthUrl.searchParams.append("redirect_uri", redirectUri);
+    googleAuthUrl.searchParams.append("redirect_uri", baseRedirectUri);  // OAuth redirect_uri 不包含 returnUrl
     googleAuthUrl.searchParams.append("response_type", "code");
     googleAuthUrl.searchParams.append("scope", "openid email profile");
+    googleAuthUrl.searchParams.append("state", encodeURIComponent(returnUrl));  // 使用 state 參數傳遞 returnUrl
 
     // 導向 Google 授權頁面
     window.location.href = googleAuthUrl.toString();
@@ -104,7 +108,7 @@ export default function LoginPage() {
    */
   const handleFacebookLogin = () => {
     // OAuth Redirect URI
-    const redirectUri = process.env.NEXT_PUBLIC_APP_URL
+    const baseRedirectUri = process.env.NEXT_PUBLIC_APP_URL
       ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`
       : "http://localhost:3000/api/auth/facebook/callback";
 
@@ -116,8 +120,9 @@ export default function LoginPage() {
       "client_id",
       process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || ""
     );
-    facebookAuthUrl.searchParams.append("redirect_uri", redirectUri);
+    facebookAuthUrl.searchParams.append("redirect_uri", baseRedirectUri);
     facebookAuthUrl.searchParams.append("scope", "public_profile,email");
+    facebookAuthUrl.searchParams.append("state", encodeURIComponent(returnUrl));  // 使用 state 參數傳遞 returnUrl
 
     // 導向 Facebook 授權頁面
     window.location.href = facebookAuthUrl.toString();
