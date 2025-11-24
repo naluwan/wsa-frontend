@@ -192,7 +192,15 @@ export default function CoursesPage() {
       isLoggedIn,
     })
 
-    // 直接導向課程詳情頁（購買邏輯在課程詳情頁處理）
+    // 如果未登入，顯示登入對話框
+    if (!isLoggedIn) {
+      console.log('[CoursesPage] 未登入，顯示登入對話框')
+      setLoginReturnUrl(targetUrl)
+      setShowLoginDialog(true)
+      return
+    }
+
+    // 如果已登入，直接導向課程詳情頁（購買邏輯在課程詳情頁處理）
     router.push(targetUrl)
   }
 
