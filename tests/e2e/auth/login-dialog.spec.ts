@@ -22,6 +22,14 @@ test.describe('登入保護與對話框', () => {
     await page.goto('/courses');
     await page.waitForLoadState('load');
 
+    // And: 等待課程卡片或課程資料載入完成
+    await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
+      timeout: 10000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 課程資料載入超時');
+    });
+
     // And: 我點擊第一個有試聽課程的按鈕
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();
 
@@ -50,6 +58,14 @@ test.describe('登入保護與對話框', () => {
     // When: 我前往課程列表頁
     await page.goto('/courses');
     await page.waitForLoadState('load');
+
+    // And: 等待課程卡片或課程資料載入完成
+    await page.waitForSelector('[data-testid="course-card"], [data-testid="purchase-course-button"]', {
+      timeout: 10000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 課程資料載入超時');
+    });
 
     // And: 我點擊第一個「立刻購買」按鈕
     const purchaseButton = page.locator('[data-testid="purchase-course-button"]').first();
@@ -82,6 +98,14 @@ test.describe('登入保護與對話框', () => {
     // When: 我前往課程列表頁
     await page.goto('/courses');
     await page.waitForLoadState('load');
+
+    // And: 等待課程卡片或課程資料載入完成
+    await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
+      timeout: 10000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 課程資料載入超時');
+    });
 
     // And: 我點擊試聽課程按鈕觸發登入對話框
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();

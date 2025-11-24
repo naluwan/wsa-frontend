@@ -32,6 +32,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await page.goto('/courses');
       await page.waitForLoadState('load');
 
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
+
       // Then: 應該看到課程卡片列表
       console.log('[Then] 驗證課程卡片存在');
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -61,6 +69,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       console.log('[And] 訪問課程列表頁面');
       await page.goto('/courses');
       await page.waitForLoadState('load');
+
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
 
       // When: 我點擊第一個課程卡片
       console.log('[When] 點擊第一個課程卡片');
@@ -103,6 +119,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       console.log('[When] 訪問課程列表頁面');
       await page.goto('/courses');
       await page.waitForLoadState('load');
+
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
 
       // Then: 記錄初始的 sidebar 狀態
       console.log('[Then] 記錄初始 sidebar 導航項目');
@@ -156,6 +180,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await page.goto('/courses');
       await page.waitForLoadState('load');
 
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
+
       // And: 我點擊課程卡片
       console.log('[And] 點擊課程卡片');
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -192,6 +224,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await page.goto('/courses');
       await page.waitForLoadState('load');
 
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
+
       // When: 我點擊第一個課程
       console.log('[When] 點擊第一個課程');
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -207,6 +247,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log('[And] 回到課程列表');
         await page.goto('/courses');
         await page.waitForLoadState('load');
+
+        // And: 等待課程卡片載入完成
+        await page.waitForSelector('[data-testid="course-card"]', {
+          timeout: 10000,
+          state: 'visible'
+        }).catch(() => {
+          console.log('[Test] ⚠️ 課程資料載入超時');
+        });
 
         console.log('[And] 點擊第二個課程');
         const updatedCourseCards = page.locator('[data-testid="course-card"]');
@@ -237,6 +285,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       console.log('[When] 訪問課程列表並選擇課程');
       await page.goto('/courses');
       await page.waitForLoadState('load');
+
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
 
       const courseCards = page.locator('[data-testid="course-card"]');
 
@@ -288,6 +344,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await page.goto('/courses');
       await page.waitForLoadState('load');
 
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
+
       const courseCards = page.locator('[data-testid="course-card"]');
 
       if (await courseCards.first().isVisible().catch(() => false)) {
@@ -335,6 +399,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await page.goto('/courses');
       await page.waitForLoadState('load');
 
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
+
       // Then: 列出所有課程卡片
       console.log('[Then] 列出可用的課程');
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -366,6 +438,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
           console.log('[回到課程列表]');
           await page.goto('/courses');
           await page.waitForLoadState('load');
+
+          // And: 等待課程卡片載入完成
+          await page.waitForSelector('[data-testid="course-card"]', {
+            timeout: 10000,
+            state: 'visible'
+          }).catch(() => {
+            console.log('[Test] ⚠️ 課程資料載入超時');
+          });
         }
       }
 
@@ -381,6 +461,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       console.log('[When] 訪問課程頁面');
       await page.goto('/courses');
       await page.waitForLoadState('load');
+
+      // And: 等待課程卡片載入完成
+      await page.waitForSelector('[data-testid="course-card"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ 課程資料載入超時');
+      });
 
       // And: 我選擇一個課程
       console.log('[And] 選擇課程');
