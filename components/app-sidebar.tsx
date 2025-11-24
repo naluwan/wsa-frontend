@@ -127,9 +127,9 @@ const aiBddNavGroups = [
         icon: Grid3x3,
       },
       {
-        title: "Prompt 寶典",
+        title: "SOP 寶典",
         href: "/sop",
-        icon: Sparkles,
+        icon: FileText,
       },
     ],
   },
@@ -214,9 +214,9 @@ const unauthenticatedAiBddNavGroups = [
         icon: Grid3x3,
       },
       {
-        title: "Prompt 寶典",
+        title: "SOP 寶典",
         href: "/sop",
-        icon: Sparkles,
+        icon: FileText,
       },
     ],
   },
