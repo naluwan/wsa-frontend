@@ -65,18 +65,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 🔴 關鍵：拿完整 git 歷史，避免 shallow clone
 
       - name: Setup Node.js (for Heroku buildpacks if needed)
         uses: actions/setup-node@v4
         with:
           node-version: "18"
 
-      # 安裝 Heroku CLI
       - name: Install Heroku CLI
         run: |
           curl https://cli-assets.heroku.com/install.sh | sh
 
-      # 設定 git 使用者，並加上 Heroku remote
       - name: Set up Heroku git remote
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_FRONTEND }}
@@ -92,13 +92,11 @@ jobs:
           # 加上 Heroku remote（app 要先在 Heroku 上建好）
           heroku git:remote -a ${HEROKU_APP_NAME}
 
-      # 推送目前 commit 到 Heroku，觸發部署
       - name: Deploy to Heroku (git push)
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME_FRONTEND }}
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |
-          # 使用 HTTPS + API Key 推到 Heroku
           git push https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git HEAD:main -f
 
       - name: Verify deployment
