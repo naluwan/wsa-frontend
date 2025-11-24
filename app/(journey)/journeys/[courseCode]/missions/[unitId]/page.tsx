@@ -426,11 +426,7 @@ export default function JourneyPlayerPage() {
 
       {/* 登入提示 Dialog（不可關閉）*/}
       <AlertDialog open={showLoginDialog} onOpenChange={() => {}}>
-        <AlertDialogContent
-          data-testid="login-prompt-dialog"
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
+        <AlertDialogContent data-testid="login-prompt-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
