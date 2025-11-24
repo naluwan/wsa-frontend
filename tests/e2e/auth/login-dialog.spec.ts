@@ -44,11 +44,11 @@ test.describe('登入保護與對話框', () => {
       const loginDialog = page.locator('[data-testid="login-prompt-dialog"]');
       await expect(loginDialog).toBeVisible({ timeout: 5000 });
 
-      // And: 對話框中應該有標題文字
-      await expect(page.locator('text=/請先登入|登入/i')).toBeVisible();
+      // And: 對話框中應該有標題文字「請先登入」
+      await expect(page.getByRole('heading', { name: '請先登入' })).toBeVisible();
 
       // And: 對話框中應該有「前往登入」按鈕
-      const gotoLoginButton = page.locator('[data-testid="goto-login-button"]');
+      const gotoLoginButton = page.getByTestId('goto-login-button');
       await expect(gotoLoginButton).toBeVisible();
 
       console.log('[Test] ✅ 未登入時點擊試聽課程會顯示登入對話框');
@@ -130,17 +130,14 @@ test.describe('登入保護與對話框', () => {
       await expect(loginDialog).toBeVisible({ timeout: 5000 });
 
       // When: 我點擊「前往登入」按鈕
-      const gotoLoginButton = page.locator('[data-testid="goto-login-button"]');
+      const gotoLoginButton = page.getByTestId('goto-login-button');
       await gotoLoginButton.click();
-      await page.waitForLoadState('load');
 
-      // Then: 應該導向到登入頁面
-      const currentUrl = page.url();
-      expect(currentUrl).toContain('/login');
+      // Then: 應該導向到登入頁面（使用更靈活的 URL 檢查）
+      await expect(page).toHaveURL(/\/login/);
 
-      // And: 應該可以看到登入頁面的元素
-      // (可以驗證登入頁面特定的元素，例如 Google/Facebook 登入按鈕)
-      await expect(page.locator('text=/登入|Login/i')).toBeVisible();
+      // And: 應該可以看到登入頁面特有的元素（例如標題或登入按鈕）
+      await expect(page.getByRole('heading', { name: /登入|請選擇登入方式/i })).toBeVisible({ timeout: 5000 });
 
       console.log('[Test] ✅ 前往登入按鈕正確導向登入頁');
     } else {
@@ -157,21 +154,26 @@ test.describe('登入保護與對話框', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
 
-    // Then: 應該顯示「無法觀看」訊息或登入提示
-    const cannotWatchMessage = page.locator('text=/無法觀看|購買.*才能享有|請先登入/i');
-    const loginDialog = page.locator('[data-testid="login-prompt-dialog"], [role="alertdialog"]');
+    // Then: 應該顯示「無法觀看」訊息或登入對話框（使用更精確的 selector）
+    // 檢查登入對話框（優先）
+    const loginDialog = page.getByTestId('login-prompt-dialog');
+    const loginDialogHeading = page.getByRole('heading', { name: '請先登入' });
 
-    // 應該至少顯示其中一個
-    const messageVisible = await cannotWatchMessage.isVisible();
-    const dialogVisible = await loginDialog.isVisible();
+    // 檢查「這是課程」訊息（如果有的話）
+    const courseMessage = page.getByText('這是課程「');
 
-    expect(messageVisible || dialogVisible).toBeTruthy();
+    // 至少應該顯示其中一個
+    const dialogVisible = await loginDialog.isVisible().catch(() => false);
+    const dialogHeadingVisible = await loginDialogHeading.isVisible().catch(() => false);
+    const messageVisible = await courseMessage.isVisible().catch(() => false);
 
+    expect(dialogVisible || dialogHeadingVisible || messageVisible).toBeTruthy();
+
+    if (dialogVisible || dialogHeadingVisible) {
+      console.log('[Test] ✅ 直接訪問受保護頁面會顯示登入對話框');
+    }
     if (messageVisible) {
       console.log('[Test] ✅ 直接訪問受保護頁面會顯示無法觀看訊息');
-    }
-    if (dialogVisible) {
-      console.log('[Test] ✅ 直接訪問受保護頁面會顯示登入對話框');
     }
   });
 
