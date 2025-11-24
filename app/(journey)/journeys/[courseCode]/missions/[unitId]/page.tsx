@@ -83,6 +83,8 @@ export default function JourneyPlayerPage() {
   // 資料狀態
   const [currentUnit, setCurrentUnit] = useState<UnitDetail | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true)
 
   // UI 狀態
   const [showLoginDialog, setShowLoginDialog] = useState<boolean>(false)
@@ -99,6 +101,34 @@ export default function JourneyPlayerPage() {
   const lastSaveTimeRef = useRef<number>(0)
   const lastPercentUpdateRef = useRef<number>(0)
 
+  // 檢查登入狀態
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include',
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setIsLoggedIn(!!data.user)
+          console.log('[JourneyPlayerPage] 登入狀態:', !!data.user)
+        } else {
+          setIsLoggedIn(false)
+          // 未登入時顯示登入對話框
+          setShowLoginDialog(true)
+          console.log('[JourneyPlayerPage] 未登入，顯示登入對話框')
+        }
+      } catch (error) {
+        console.error('[JourneyPlayerPage] 檢查登入狀態失敗:', error)
+        setIsLoggedIn(false)
+        setShowLoginDialog(true)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
   // 載入當前單元詳情
   useEffect(() => {
@@ -267,10 +297,12 @@ export default function JourneyPlayerPage() {
     }
   }, [currentUnit])
 
-  if (loading || !currentUnit) {
+  if (checkingAuth || loading || !currentUnit) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">載入中...</p>
+        <p className="text-muted-foreground">
+          {checkingAuth ? '驗證登入狀態...' : '載入中...'}
+        </p>
       </div>
     )
   }
@@ -387,11 +419,11 @@ export default function JourneyPlayerPage() {
 
       {/* 登入提示 Dialog */}
       <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent data-testid="login-prompt-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle>需要先登入</AlertDialogTitle>
-            <AlertDialogDescription>
-              請先登入帳號才能試看課程或觀看單元內容。
+            <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              完成登入並擁有完整課程體驗，包含觀看進度記錄、完成單元獲得 XP、參與排行榜等功能！
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -399,8 +431,9 @@ export default function JourneyPlayerPage() {
             <AlertDialogAction
               onClick={() => {
                 const currentPath = window.location.pathname
-                router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`)
+                router.push(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
               }}
+              className="bg-yellow-600 hover:bg-yellow-700 text-black"
             >
               前往登入
             </AlertDialogAction>
