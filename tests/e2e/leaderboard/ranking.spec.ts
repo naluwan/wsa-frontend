@@ -33,7 +33,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面
       console.log('[When] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // Then: 應該看到排行榜表格
@@ -54,7 +54,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面
       console.log('[When] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // Then: 驗證第一個排行榜行包含所有必要欄位
@@ -97,7 +97,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面並確保在「學習排行榜」Tab
       console.log('[When] 訪問排行榜頁面 - 學習排行榜');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // 確保在總排行榜 Tab
@@ -149,7 +149,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜並記錄此使用者的排名
       console.log('[When] 訪問排行榜並記錄排名');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       const leaderboardRows = page.locator('[data-testid="leaderboard-row"]');
@@ -179,7 +179,7 @@ test.describe('Leaderboard: 排名驗證', () => {
       console.log(`使用者 2: ${user2.displayName}, totalXp: ${user2.totalXp}`);
 
       // 重新訪問排行榜
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       const leaderboardRows2 = page.locator('[data-testid="leaderboard-row"]');
@@ -218,7 +218,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // And: 我訪問排行榜頁面
       console.log('[And] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // When: 我點擊「學習排行榜」Tab
@@ -274,7 +274,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面
       console.log('[When] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // And: 我點擊「本週成長榜」Tab
@@ -333,7 +333,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面
       console.log('[When] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // Then: 應該看到當前使用者的排名卡片（藍色高亮）
@@ -363,7 +363,7 @@ test.describe('Leaderboard: 排名驗證', () => {
 
       // When: 我訪問排行榜頁面
       console.log('[When] 訪問排行榜頁面');
-      await page.goto('http://localhost:3000/leaderboard');
+      await page.goto('/leaderboard');
       await page.waitForLoadState('networkidle');
 
       // Then: 驗證當前使用者卡片的 XP 與登入時資料一致

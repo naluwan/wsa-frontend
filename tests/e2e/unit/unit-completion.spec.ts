@@ -31,7 +31,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我開啟一個免費試看的單元頁
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // Then: 應該可以看到影片播放器容器
@@ -63,7 +63,7 @@ test.describe('單元頁與影片完成流程', () => {
     await devLogin(page, 'seed_test_050');
 
     // When: 我開啟一個免費試看的單元頁
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // Then: 應該可以看到影片播放器
@@ -114,7 +114,7 @@ test.describe('單元頁與影片完成流程', () => {
     console.log(`[Given] 初始狀態: Level ${initialLevel}, totalXp ${initialXp}`);
 
     // When: 我開啟一個免費試看的單元頁
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // And: 我點擊「標記為完成」或「完成」按鈕
@@ -155,7 +155,7 @@ test.describe('單元頁與影片完成流程', () => {
       }
 
       // 或者重新檢查登入狀態
-      const checkResponse = await page.request.get('http://localhost:3000/api/auth/me');
+      const checkResponse = await page.request.get('/api/auth/me');
       if (checkResponse.ok()) {
         const data = await checkResponse.json();
         const updatedXp = data.user.totalXp;
@@ -190,7 +190,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我直接呼叫完成單元的 API
     const completeResponse = await page.request.post(
-      'http://localhost:8080/api/units/sdp-intro-ai-era/complete'
+      '/api/units/sdp-intro-ai-era/complete'
     );
 
     // Then: 應該成功回傳
@@ -217,10 +217,10 @@ test.describe('單元頁與影片完成流程', () => {
     await devLogin(page, 'seed_test_068');
 
     // And: 我先完成一個單元
-    await page.request.post('http://localhost:8080/api/units/sdp-intro-course-overview/complete');
+    await page.request.post('/api/units/sdp-intro-course-overview/complete');
 
     // When: 我開啟課程頁面查看單元列表
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // Then: 單元應該顯示「已完成」標記
@@ -250,7 +250,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我嘗試完成一個付費單元
     const completeResponse = await page.request.post(
-      'http://localhost:8080/api/units/sdp-platform-user-manual/complete'
+      '/api/units/sdp-platform-user-manual/complete'
     );
 
     // Then: 應該失敗或回傳錯誤
@@ -270,7 +270,7 @@ test.describe('單元頁與影片完成流程', () => {
     await devLogin(page, 'seed_test_066');
 
     // When: 我開啟一個免費試看的單元頁
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // And: 影片播放器載入完成

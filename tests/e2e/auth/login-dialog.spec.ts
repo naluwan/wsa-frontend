@@ -22,7 +22,7 @@ test.describe('登入保護與對話框', () => {
     await page.waitForLoadState('networkidle');
 
     // When: 我前往課程列表頁
-    await page.goto('http://localhost:3000/courses');
+    await page.goto('/courses');
     await page.waitForLoadState('networkidle');
 
     // And: 我點擊第一個有試聽課程的按鈕
@@ -54,7 +54,7 @@ test.describe('登入保護與對話框', () => {
     await page.waitForLoadState('networkidle');
 
     // When: 我前往課程列表頁
-    await page.goto('http://localhost:3000/courses');
+    await page.goto('/courses');
     await page.waitForLoadState('networkidle');
 
     // And: 我點擊第一個「立刻購買」按鈕
@@ -89,7 +89,7 @@ test.describe('登入保護與對話框', () => {
     await page.waitForLoadState('networkidle');
 
     // When: 我前往課程列表頁
-    await page.goto('http://localhost:3000/courses');
+    await page.goto('/courses');
     await page.waitForLoadState('networkidle');
 
     // And: 我點擊試聽課程按鈕觸發登入對話框
@@ -126,7 +126,7 @@ test.describe('登入保護與對話框', () => {
     // When: 我直接訪問一個受保護的單元頁面（非免費試看）
     // 注意：這裡需要知道一個付費單元的 unitId
     // 根據種子資料，sdp-platform-user-manual 是付費單元
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-platform-user-manual');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-platform-user-manual');
     await page.waitForLoadState('networkidle');
 
     // Then: 應該顯示「無法觀看」訊息或登入提示
@@ -151,7 +151,7 @@ test.describe('登入保護與對話框', () => {
     // Given: 我尚未登入
     // When: 我直接訪問一個免費試看的單元頁面
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
-    await page.goto('http://localhost:3000/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('networkidle');
 
     // Then: 應該可以看到影片播放器（或至少不顯示「無法觀看」）

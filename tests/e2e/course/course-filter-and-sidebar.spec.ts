@@ -29,7 +29,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // Then: 應該看到課程卡片列表
@@ -59,7 +59,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // And: 我在課程列表頁面
       console.log('[And] 訪問課程列表頁面');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // When: 我點擊第一個課程卡片
@@ -101,7 +101,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程列表頁面
       console.log('[When] 訪問課程列表頁面');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // Then: 記錄初始的 sidebar 狀態
@@ -153,7 +153,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程列表
       console.log('[When] 訪問課程列表');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // And: 我點擊課程卡片
@@ -189,7 +189,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // And: 我訪問課程列表
       console.log('[And] 訪問課程列表');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // When: 我點擊第一個課程
@@ -205,7 +205,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
         // And: 回到課程列表並點擊第二個課程
         console.log('[And] 回到課程列表');
-        await page.goto('http://localhost:3000/courses');
+        await page.goto('/courses');
         await page.waitForLoadState('networkidle');
 
         console.log('[And] 點擊第二個課程');
@@ -235,7 +235,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程列表並選擇一個課程
       console.log('[When] 訪問課程列表並選擇課程');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -285,7 +285,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       await devLogin(page, 'seed_test_001');
 
       console.log('[And] 訪問課程列表');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       const courseCards = page.locator('[data-testid="course-card"]');
@@ -332,7 +332,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // Then: 列出所有課程卡片
@@ -364,7 +364,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         // 回到課程列表準備下一個迭代
         if (i < courseCount - 1) {
           console.log('[回到課程列表]');
-          await page.goto('http://localhost:3000/courses');
+          await page.goto('/courses');
           await page.waitForLoadState('networkidle');
         }
       }
@@ -379,7 +379,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
-      await page.goto('http://localhost:3000/courses');
+      await page.goto('/courses');
       await page.waitForLoadState('networkidle');
 
       // And: 我選擇一個課程
