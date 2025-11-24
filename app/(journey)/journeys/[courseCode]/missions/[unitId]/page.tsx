@@ -429,7 +429,7 @@ export default function JourneyPlayerPage() {
         <AlertDialogContent
           data-testid="login-prompt-dialog"
           onEscapeKeyDown={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
