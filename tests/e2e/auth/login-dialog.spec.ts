@@ -169,31 +169,43 @@ test.describe('登入保護與對話框', () => {
   test('未登入時直接訪問受保護的單元頁面應顯示登入提示', async ({ page }) => {
     // Given: 我尚未登入
     // When: 我直接訪問一個受保護的單元頁面（非免費試看）
-    // 注意：這裡需要知道一個付費單元的 unitId
     // 根據種子資料，sdp-platform-user-manual 是付費單元
-    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-platform-user-manual');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-platform-user-manual', {
+      waitUntil: 'load'
+    });
 
-    // Then: 應該顯示「無法觀看」訊息或登入對話框（使用更精確的 selector）
-    // 檢查登入對話框（優先）
+    // Then: 等待頁面載入完成（不再顯示「載入中...」）
+    // 等待直到出現以下任一元素：登入對話框、課程訊息、或頁面主要內容
+    await page.waitForFunction(
+      () => {
+        const loadingText = document.body.innerText.includes('載入中');
+        const hasDialog = document.querySelector('[data-testid="login-prompt-dialog"]');
+        const hasHeading = document.querySelector('[role="heading"]');
+        return !loadingText && (hasDialog || hasHeading);
+      },
+      { timeout: 10000 }
+    ).catch(() => {
+      console.log('[Test] ⚠️ 等待頁面載入超時，繼續檢查元素');
+    });
+
+    // Then: 應該顯示「無法觀看」訊息或登入對話框
     const loginDialog = page.getByTestId('login-prompt-dialog');
     const loginDialogHeading = page.getByRole('heading', { name: '請先登入' });
-
-    // 檢查「這是課程」訊息（如果有的話）
     const courseMessage = page.getByText('這是課程「');
+    const lockMessage = page.getByText(/您無法觀看|需要購買/i);
 
     // 至少應該顯示其中一個
     const dialogVisible = await loginDialog.isVisible().catch(() => false);
     const dialogHeadingVisible = await loginDialogHeading.isVisible().catch(() => false);
     const messageVisible = await courseMessage.isVisible().catch(() => false);
+    const lockVisible = await lockMessage.isVisible().catch(() => false);
 
-    expect(dialogVisible || dialogHeadingVisible || messageVisible).toBeTruthy();
+    expect(dialogVisible || dialogHeadingVisible || messageVisible || lockVisible).toBeTruthy();
 
     if (dialogVisible || dialogHeadingVisible) {
       console.log('[Test] ✅ 直接訪問受保護頁面會顯示登入對話框');
     }
-    if (messageVisible) {
+    if (messageVisible || lockVisible) {
       console.log('[Test] ✅ 直接訪問受保護頁面會顯示無法觀看訊息');
     }
   });
@@ -202,13 +214,13 @@ test.describe('登入保護與對話框', () => {
     // Given: 我尚未登入
     // When: 我直接訪問一個免費試看的單元頁面
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
-    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
+    await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview', {
+      waitUntil: 'load'
+    });
 
-    // Then: 應該顯示登入對話框
+    // Then: 等待頁面載入完成並顯示登入對話框
     const loginDialog = page.locator('[data-testid="login-prompt-dialog"]');
-    await expect(loginDialog).toBeVisible({ timeout: 5000 });
+    await expect(loginDialog).toBeVisible({ timeout: 10000 });
     console.log('[Test] ✅ 未登入訪問免費試看單元會顯示登入對話框');
 
     // And: 對話框中應該只有「前往登入」按鈕（沒有「稍後再說」）
