@@ -46,7 +46,8 @@ export async function devLogin(
   // 呼叫 frontend dev login API
   // 注意：必須使用 page.request 而不是獨立的 request context
   // 這樣 cookie 才會自動設置到 page 的 browser context 中
-  const response = await page.request.post('http://localhost:3000/api/auth/dev-login', {
+  // 使用相對路徑，Playwright 會自動使用 baseURL
+  const response = await page.request.post('/api/auth/dev-login', {
     data: {
       externalId,
     },
@@ -96,7 +97,8 @@ export async function devLoginWithContext(
   console.log(`[Dev Login Helper (Context)] 嘗試登入種子使用者: ${externalId}`);
 
   // 呼叫 frontend dev login API
-  const response = await request.post('http://localhost:3000/api/auth/dev-login', {
+  // 使用相對路徑，Playwright 會自動使用 baseURL
+  const response = await request.post('/api/auth/dev-login', {
     data: {
       externalId,
     },
@@ -192,7 +194,8 @@ export async function logout(context: BrowserContext): Promise<void> {
  */
 export async function checkLoginStatus(page: Page): Promise<User | null> {
   try {
-    const response = await page.request.get('http://localhost:3000/api/auth/me');
+    // 使用相對路徑，Playwright 會自動使用 baseURL
+    const response = await page.request.get('/api/auth/me');
 
     if (!response.ok()) {
       return null;
