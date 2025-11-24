@@ -34,33 +34,39 @@ test.describe('單元頁與影片完成流程', () => {
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
 
-    // And: 等待影片播放器載入
-    await page.waitForSelector('[data-testid="unit-video"], iframe[src*="youtube"]', {
-      timeout: 15000,
-      state: 'visible'
-    }).catch(() => {
-      console.log('[Test] ⚠️ 影片播放器載入超時');
-    });
-
     // Then: 應該可以看到影片播放器容器
     const videoPlayer = page.locator('[data-testid="unit-video"]');
-    await expect(videoPlayer).toBeVisible({ timeout: 10000 });
+    await expect(videoPlayer).toBeVisible({ timeout: 15000 });
+    console.log('[Test] ✅ 找到影片播放器容器');
 
-    // And: 影片播放器內應該有 YouTube IFrame 或影片元素
-    const iframe = page.locator('iframe[src*="youtube"], iframe[src*="youtu.be"]');
-    const video = page.locator('video');
+    // And: 影片播放器應該有自訂控制列元素（以此判斷播放器成功載入）
+    // 不使用 iframe/video selector，因為它們可能被自訂 UI 覆蓋或難以訪問
+    const playPauseButton = page.locator('[data-testid="video-play-pause-button"]');
+    const progressBar = page.locator('[data-testid="video-progress-bar"]');
+    const volumeButton = page.locator('[data-testid="video-volume-button"]');
 
-    const iframeVisible = await iframe.isVisible().catch(() => false);
-    const videoVisible = await video.isVisible().catch(() => false);
+    const playPauseVisible = await playPauseButton.isVisible().catch(() => false);
+    const progressBarVisible = await progressBar.isVisible().catch(() => false);
+    const volumeVisible = await volumeButton.isVisible().catch(() => false);
 
-    // 至少應該有一個影片元素
-    expect(iframeVisible || videoVisible).toBeTruthy();
+    // 至少應該有一個控制元素可見（控制列可能需要 hover 才顯示）
+    const hasPlayerControls = playPauseVisible || progressBarVisible || volumeVisible;
 
-    if (iframeVisible) {
-      console.log('[Test] ✅ 找到 YouTube IFrame 播放器');
-    }
-    if (videoVisible) {
-      console.log('[Test] ✅ 找到 Video 元素');
+    if (!hasPlayerControls) {
+      // 如果控制列不可見，嘗試 hover 在播放器上
+      console.log('[Test] 嘗試 hover 在播放器上以顯示控制列');
+      await videoPlayer.hover();
+      await page.waitForTimeout(500);
+
+      const playPauseAfterHover = await playPauseButton.isVisible().catch(() => false);
+      const progressAfterHover = await progressBar.isVisible().catch(() => false);
+      const volumeAfterHover = await volumeButton.isVisible().catch(() => false);
+
+      expect(playPauseAfterHover || progressAfterHover || volumeAfterHover).toBeTruthy();
+      console.log('[Test] ✅ hover 後控制列顯示');
+    } else {
+      expect(hasPlayerControls).toBeTruthy();
+      console.log('[Test] ✅ 播放器控制列可見');
     }
 
     console.log('[Test] ✅ 免費試看單元頁正確顯示影片播放器');

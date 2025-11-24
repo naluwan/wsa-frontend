@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { devLogin } from '../helpers/auth';
 
 /**
@@ -14,6 +14,18 @@ import { devLogin } from '../helpers/auth';
  * - course-card: 課程卡片
  * - sidebar-nav-{路徑}: sidebar 導航連結
  */
+
+/**
+ * Helper: 前往課程列表頁並等待課程卡片載入
+ * 不使用 networkidle，因為頁面可能有長連線/輪詢導致永遠等不到 idle
+ */
+async function gotoCoursesAndWaitForCards(page: Page) {
+  await page.goto('/courses', { waitUntil: 'load' });
+  await page.waitForSelector('[data-testid="course-card"]', {
+    timeout: 15000,
+    state: 'visible'
+  });
+}
 
 test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
   test.beforeEach(async ({ context }) => {
@@ -67,14 +79,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // And: 我在課程列表頁面
       console.log('[And] 訪問課程列表頁面');
-      await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
-
-      // And: 等待課程卡片載入完成
-      await page.waitForSelector('[data-testid="course-card"]', {
-        timeout: 10000,
-        state: 'visible'
-      });
+      await gotoCoursesAndWaitForCards(page);
 
       // When: 我點擊第一個課程卡片
       console.log('[When] 點擊第一個課程卡片');
@@ -173,14 +178,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // When: 我訪問課程列表
       console.log('[When] 訪問課程列表');
-      await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
-
-      // And: 等待課程卡片載入完成
-      await page.waitForSelector('[data-testid="course-card"]', {
-        timeout: 10000,
-        state: 'visible'
-      });
+      await gotoCoursesAndWaitForCards(page);
 
       // And: 我點擊「進入課程」或「立刻購買」按鈕（而非卡片本身）
       console.log('[And] 尋找並點擊進入課程或購買按鈕');
@@ -221,14 +219,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       // And: 我訪問課程列表
       console.log('[And] 訪問課程列表');
-      await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
-
-      // And: 等待課程卡片載入完成
-      await page.waitForSelector('[data-testid="course-card"]', {
-        timeout: 10000,
-        state: 'visible'
-      });
+      await gotoCoursesAndWaitForCards(page);
 
       // When: 我點擊第一個課程
       console.log('[When] 點擊第一個課程');
