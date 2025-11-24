@@ -153,15 +153,46 @@ export default function JourneyPlayerPage() {
           if (data.lastPositionSeconds) {
             setLastSavedPosition(data.lastPositionSeconds)
           }
+        } else {
+          // API 返回錯誤（401, 403, 404 等），設置一個默認的單元資料
+          // 讓頁面可以渲染，而不是永遠停留在載入狀態
+          console.error(`載入單元詳情失敗: HTTP ${res.status}`)
+          setCurrentUnit({
+            id: unitId,
+            unitId: unitId,
+            courseCode: courseCode,
+            courseTitle: '',
+            title: '無法載入單元',
+            type: 'VIDEO',
+            videoUrl: '',
+            xpReward: 0,
+            isFreePreview: false,
+            canAccess: false,
+            isCompleted: false,
+          })
         }
       } catch (error) {
         console.error('載入單元詳情失敗:', error)
+        // 網路錯誤或其他異常，也設置默認資料
+        setCurrentUnit({
+          id: unitId,
+          unitId: unitId,
+          courseCode: courseCode,
+          courseTitle: '',
+          title: '無法載入單元',
+          type: 'VIDEO',
+          videoUrl: '',
+          xpReward: 0,
+          isFreePreview: false,
+          canAccess: false,
+          isCompleted: false,
+        })
       } finally {
         setLoading(false)
       }
     }
     fetchUnitDetail()
-  }, [unitId])
+  }, [unitId, courseCode])
 
   /**
    * 處理完成單元
