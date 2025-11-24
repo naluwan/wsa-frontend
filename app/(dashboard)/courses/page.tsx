@@ -92,8 +92,10 @@ export default function CoursesPage() {
         if (res.ok) {
           const data = await res.json()
           setCourses(data)
+          // 課程列表載入完成，立即設置 loading 為 false
+          setLoading(false)
 
-          // 為每個有免費試看的課程獲取第一個免費單元
+          // 為每個有免費試看的課程獲取第一個免費單元（背景執行，不阻塞頁面載入）
           const freePreviewPromises = data.map(async (course: Course) => {
             if (course.hasFreePreview) {
               try {
@@ -118,12 +120,15 @@ export default function CoursesPage() {
             }
           })
 
-          // 等待所有免費單元請求完成
-          await Promise.all(freePreviewPromises)
+          // 在背景等待所有免費單元請求完成（不阻塞頁面）
+          Promise.all(freePreviewPromises).catch(error => {
+            console.error('獲取免費單元時發生錯誤:', error)
+          })
+        } else {
+          setLoading(false)
         }
       } catch (error) {
         console.error('獲取課程資料失敗:', error)
-      } finally {
         setLoading(false)
       }
     }
