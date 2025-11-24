@@ -18,23 +18,30 @@ test.describe('登入保護與對話框', () => {
 
   test('未登入時點擊「試聽課程」按鈕應顯示登入對話框', async ({ page }) => {
     // Given: 我尚未登入
-    // When: 我前往課程列表頁
-    await page.goto('/courses');
-    await page.waitForLoadState('networkidle');
+    // When: 監聽 /api/auth/me 請求以確保登入狀態檢查完成
+    const authPromise = page.waitForResponse(
+      response => response.url().includes('/api/auth/me') && response.status() === 200,
+      { timeout: 10000 }
+    );
 
-    // And: 等待課程卡片或課程資料載入完成
-    await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
+    // And: 我前往課程列表頁
+    await page.goto('/courses');
+
+    // And: 等待登入狀態API完成
+    const authResponse = await authPromise;
+    const authData = await authResponse.json();
+
+    // And: 驗證確實是未登入狀態
+    console.log('[Test] 登入狀態API回應:', authData);
+    expect(authData.user).toBeNull();
+
+    // And: 等待課程卡片載入完成
+    await page.waitForSelector('[data-testid="preview-course-button"]', {
       timeout: 10000,
       state: 'visible'
-    }).catch(() => {
-      console.log('[Test] ⚠️ 課程資料載入超時');
     });
 
-    // And: 等待登入狀態檢查完成（等待所有 API 請求完成）
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500); // 額外等待 React 狀態更新
-
-    // And: 我點擊第一個有試聽課程的按鈕
+    // When: 我點擊第一個有試聽課程的按鈕
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();
 
     if (await previewButton.isVisible()) {
@@ -59,23 +66,30 @@ test.describe('登入保護與對話框', () => {
 
   test('未登入時點擊「立刻購買」按鈕應顯示登入對話框或導向登入頁', async ({ page }) => {
     // Given: 我尚未登入
-    // When: 我前往課程列表頁
-    await page.goto('/courses');
-    await page.waitForLoadState('networkidle');
+    // When: 監聽 /api/auth/me 請求以確保登入狀態檢查完成
+    const authPromise = page.waitForResponse(
+      response => response.url().includes('/api/auth/me') && response.status() === 200,
+      { timeout: 10000 }
+    );
 
-    // And: 等待課程卡片或課程資料載入完成
-    await page.waitForSelector('[data-testid="course-card"], [data-testid="purchase-course-button"]', {
+    // And: 我前往課程列表頁
+    await page.goto('/courses');
+
+    // And: 等待登入狀態API完成
+    const authResponse = await authPromise;
+    const authData = await authResponse.json();
+
+    // And: 驗證確實是未登入狀態
+    console.log('[Test] 登入狀態API回應:', authData);
+    expect(authData.user).toBeNull();
+
+    // And: 等待課程卡片載入完成
+    await page.waitForSelector('[data-testid="purchase-course-button"]', {
       timeout: 10000,
       state: 'visible'
-    }).catch(() => {
-      console.log('[Test] ⚠️ 課程資料載入超時');
     });
 
-    // And: 等待登入狀態檢查完成
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
-
-    // And: 我點擊第一個「立刻購買」按鈕
+    // When: 我點擊第一個「立刻購買」按鈕
     const purchaseButton = page.locator('[data-testid="purchase-course-button"]').first();
 
     if (await purchaseButton.isVisible()) {
@@ -103,23 +117,30 @@ test.describe('登入保護與對話框', () => {
 
   test('登入對話框中的「前往登入」按鈕應正確導向登入頁', async ({ page }) => {
     // Given: 我尚未登入
-    // When: 我前往課程列表頁
-    await page.goto('/courses');
-    await page.waitForLoadState('networkidle');
+    // When: 監聽 /api/auth/me 請求以確保登入狀態檢查完成
+    const authPromise = page.waitForResponse(
+      response => response.url().includes('/api/auth/me') && response.status() === 200,
+      { timeout: 10000 }
+    );
 
-    // And: 等待課程卡片或課程資料載入完成
-    await page.waitForSelector('[data-testid="course-card"], [data-testid="preview-course-button"]', {
+    // And: 我前往課程列表頁
+    await page.goto('/courses');
+
+    // And: 等待登入狀態API完成
+    const authResponse = await authPromise;
+    const authData = await authResponse.json();
+
+    // And: 驗證確實是未登入狀態
+    console.log('[Test] 登入狀態API回應:', authData);
+    expect(authData.user).toBeNull();
+
+    // And: 等待課程卡片載入完成
+    await page.waitForSelector('[data-testid="preview-course-button"]', {
       timeout: 10000,
       state: 'visible'
-    }).catch(() => {
-      console.log('[Test] ⚠️ 課程資料載入超時');
     });
 
-    // And: 等待登入狀態檢查完成
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500);
-
-    // And: 我點擊試聽課程按鈕觸發登入對話框
+    // When: 我點擊試聽課程按鈕觸發登入對話框
     const previewButton = page.locator('[data-testid="preview-course-button"]').first();
 
     if (await previewButton.isVisible()) {
