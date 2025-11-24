@@ -87,6 +87,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Then: 應該導航到課程頁面
       console.log('[Then] 驗證導航到課程頁面');
+      await page.waitForURL('**/courses', { timeout: 10000 });
       await page.waitForLoadState('load');
       expect(page.url()).toContain('/courses');
       console.log('✅ 成功導航到課程頁面');
@@ -166,6 +167,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
         // Then: 應該導航到個人檔案頁面
         console.log('[Then] 驗證導航到個人檔案頁面');
+        await page.waitForURL('**/profile', { timeout: 10000 });
         await page.waitForLoadState('load');
         expect(page.url()).toContain('/profile');
         console.log('✅ 成功導航到個人檔案頁面');
@@ -203,6 +205,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Then: 應該導航到排行榜頁面
       console.log('[Then] 驗證導航到排行榜頁面');
+      await page.waitForURL('**/leaderboard', { timeout: 10000 });
       await page.waitForLoadState('load');
       expect(page.url()).toContain('/leaderboard');
       console.log('✅ 成功導航到排行榜頁面');

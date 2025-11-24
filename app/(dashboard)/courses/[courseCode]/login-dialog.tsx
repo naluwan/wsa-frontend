@@ -40,7 +40,7 @@ export function LoginDialog({ open, onOpenChange, returnUrl }: LoginDialogProps)
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="sm:max-w-md" data-testid="login-prompt-dialog">
         {/* 關閉按鈕 */}
         <button
           onClick={() => onOpenChange(false)}
@@ -62,6 +62,7 @@ export function LoginDialog({ open, onOpenChange, returnUrl }: LoginDialogProps)
             onClick={handleLogin}
             className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-8"
             size="lg"
+            data-testid="goto-login-button"
           >
             前往登入
           </Button>

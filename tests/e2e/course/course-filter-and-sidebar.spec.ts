@@ -93,10 +93,12 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         const href = await courseLink.getAttribute('href');
 
         await firstCard.click();
-        await page.waitForLoadState('load');
 
         // Then: 應該導航到課程詳細頁面
         console.log('[Then] 驗證導航到課程詳細頁面');
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
+        await page.waitForLoadState('load');
+
         const currentUrl = page.url();
         console.log(`當前 URL: ${currentUrl}`);
 
@@ -139,6 +141,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         // Then: sidebar 應該更新
@@ -197,6 +200,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log(`點擊的課程: ${cardText?.substring(0, 30)}...`);
 
         await courseCards.first().click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         // Then: 驗證 URL 格式
@@ -239,6 +243,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       if (await courseCards.count() >= 2) {
         // 記錄第一個課程的 URL
         await courseCards.nth(0).click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
         const firstCourseUrl = page.url();
         console.log(`第一個課程 URL: ${firstCourseUrl}`);
@@ -259,6 +264,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log('[And] 點擊第二個課程');
         const updatedCourseCards = page.locator('[data-testid="course-card"]');
         await updatedCourseCards.nth(1).click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
         const secondCourseUrl = page.url();
         console.log(`第二個課程 URL: ${secondCourseUrl}`);
@@ -298,6 +304,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         // Then: 檢查 sidebar 中是否有課程相關的導航項目
@@ -357,6 +364,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       if (await courseCards.first().isVisible().catch(() => false)) {
         console.log('[And] 選擇課程');
         await courseCards.first().click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         // When: 我尋找並點擊 sidebar 中的「所有單元」項目
@@ -370,6 +378,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
           console.log(`所有單元連結: ${href}`);
 
           await unitsLink.click();
+          await page.waitForURL('**/units**', { timeout: 10000 });
           await page.waitForLoadState('load');
 
           // Then: 應該導航到該課程的單元頁面
@@ -423,6 +432,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log(`課程名稱: ${cardText?.substring(0, 50)}...`);
 
         await card.click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         const courseUrl = page.url();
@@ -476,6 +486,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
+        await page.waitForURL('**/courses/**', { timeout: 10000 });
         await page.waitForLoadState('load');
 
         // Then: 驗證 sidebar 導航項目仍然可點擊
