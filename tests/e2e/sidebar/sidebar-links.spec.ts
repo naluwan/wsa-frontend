@@ -26,6 +26,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
 
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid^="sidebar-nav-"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
+
       // When: 我檢查 sidebar 中的導航連結
       console.log('[When] 檢查 sidebar 導航連結');
 
@@ -63,6 +71,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
 
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid="sidebar-nav-courses"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
+
       // When: 我點擊課程連結
       console.log('[When] 點擊課程連結');
       const coursesLink = page.locator('[data-testid="sidebar-nav-courses"]');
@@ -90,6 +106,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('[When] 訪問首頁');
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
+
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid^="sidebar-nav-"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
 
       // Then: 應該看到所有登入後的連結
       console.log('[Then] 驗證登入後的完整連結');
@@ -124,6 +148,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
 
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid^="sidebar-nav-"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
+
       // When: 我點擊個人檔案連結
       console.log('[When] 點擊個人檔案連結');
       const profileLink = page.locator('[data-testid="sidebar-nav-profile"]');
@@ -155,6 +187,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
 
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid="sidebar-nav-leaderboard"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
+
       // When: 我點擊排行榜連結
       console.log('[When] 點擊排行榜連結');
       const leaderboardLink = page.locator('[data-testid="sidebar-nav-leaderboard"]');
@@ -179,6 +219,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('\n[Test Case 1] 在首頁時');
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
+
+      // And: 等待 sidebar 導航元素載入
+      await page.waitForSelector('[data-testid^="sidebar-nav-"]', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 導航元素載入超時');
+      });
 
       const homeLink = page.locator('[data-testid="sidebar-nav-"]');
       const homeLinkClasses = await homeLink.getAttribute('class');
@@ -254,6 +302,14 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('[And] 訪問首頁');
       await page.goto('http://localhost:3000');
       await page.waitForLoadState('load');
+
+      // And: 等待 sidebar 元素載入
+      await page.waitForSelector('aside', {
+        timeout: 10000,
+        state: 'visible'
+      }).catch(() => {
+        console.log('[Test] ⚠️ Sidebar 元素載入超時');
+      });
 
       // When: 我尋找 sidebar 收合按鈕並點擊
       console.log('[When] 尋找並點擊 sidebar 收合按鈕');

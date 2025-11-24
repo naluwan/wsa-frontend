@@ -34,6 +34,14 @@ test.describe('單元頁與影片完成流程', () => {
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
 
+    // And: 等待影片播放器載入
+    await page.waitForSelector('[data-testid="unit-video"], iframe[src*="youtube"]', {
+      timeout: 15000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 影片播放器載入超時');
+    });
+
     // Then: 應該可以看到影片播放器容器
     const videoPlayer = page.locator('[data-testid="unit-video"]');
     await expect(videoPlayer).toBeVisible({ timeout: 10000 });
@@ -65,6 +73,14 @@ test.describe('單元頁與影片完成流程', () => {
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
+
+    // And: 等待影片播放器載入
+    await page.waitForSelector('[data-testid="unit-video"], iframe[src*="youtube"]', {
+      timeout: 15000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 影片播放器載入超時');
+    });
 
     // Then: 應該可以看到影片播放器
     const videoPlayer = page.locator('[data-testid="unit-video"]');
@@ -116,6 +132,14 @@ test.describe('單元頁與影片完成流程', () => {
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
+
+    // And: 等待頁面元素載入
+    await page.waitForSelector('[data-testid="unit-video"], button', {
+      timeout: 15000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 頁面元素載入超時');
+    });
 
     // And: 我點擊「標記為完成」或「完成」按鈕
     // 注意：按鈕可能有不同的文字或 data-testid
@@ -223,6 +247,14 @@ test.describe('單元頁與影片完成流程', () => {
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
 
+    // And: 等待頁面元素載入
+    await page.waitForSelector('[data-testid="unit-video"], [data-testid="completed-badge"]', {
+      timeout: 15000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 頁面元素載入超時');
+    });
+
     // Then: 單元應該顯示「已完成」標記
     // 可能在 sidebar 或單元頁面上
     const completedBadge = page.locator('[data-testid="completed-badge"]');
@@ -272,6 +304,14 @@ test.describe('單元頁與影片完成流程', () => {
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
     await page.waitForLoadState('load');
+
+    // And: 等待影片播放器載入
+    await page.waitForSelector('[data-testid="unit-video"], iframe[src*="youtube"]', {
+      timeout: 15000,
+      state: 'visible'
+    }).catch(() => {
+      console.log('[Test] ⚠️ 影片播放器載入超時');
+    });
 
     // And: 影片播放器載入完成
     const videoPlayer = page.locator('[data-testid="unit-video"]');
