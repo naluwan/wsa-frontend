@@ -32,7 +32,7 @@ test.describe('單元頁與影片完成流程', () => {
     // When: 我開啟一個免費試看的單元頁
     // 根據種子資料，sdp-intro-course-overview 是免費試看單元
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Then: 應該可以看到影片播放器容器
     const videoPlayer = page.locator('[data-testid="unit-video"]');
@@ -64,7 +64,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Then: 應該可以看到影片播放器
     const videoPlayer = page.locator('[data-testid="unit-video"]');
@@ -115,7 +115,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // And: 我點擊「標記為完成」或「完成」按鈕
     // 注意：按鈕可能有不同的文字或 data-testid
@@ -221,7 +221,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我開啟課程頁面查看單元列表
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Then: 單元應該顯示「已完成」標記
     // 可能在 sidebar 或單元頁面上
@@ -271,7 +271,7 @@ test.describe('單元頁與影片完成流程', () => {
 
     // When: 我開啟一個免費試看的單元頁
     await page.goto('/journeys/SOFTWARE_DESIGN_PATTERN/missions/sdp-intro-course-overview');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // And: 影片播放器載入完成
     const videoPlayer = page.locator('[data-testid="unit-video"]');

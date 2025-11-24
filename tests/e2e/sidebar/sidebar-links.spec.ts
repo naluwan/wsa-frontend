@@ -24,7 +24,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // Given: 我在未登入狀態下訪問首頁
       console.log('[Given] 未登入狀態下訪問首頁');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我檢查 sidebar 中的導航連結
       console.log('[When] 檢查 sidebar 導航連結');
@@ -61,7 +61,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // Given: 我在未登入狀態下
       console.log('[Given] 未登入狀態下');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我點擊課程連結
       console.log('[When] 點擊課程連結');
@@ -71,7 +71,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Then: 應該導航到課程頁面
       console.log('[Then] 驗證導航到課程頁面');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       expect(page.url()).toContain('/courses');
       console.log('✅ 成功導航到課程頁面');
 
@@ -89,7 +89,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // When: 我訪問首頁
       console.log('[When] 訪問首頁');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Then: 應該看到所有登入後的連結
       console.log('[Then] 驗證登入後的完整連結');
@@ -122,7 +122,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // And: 我在首頁
       console.log('[And] 在首頁');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我點擊個人檔案連結
       console.log('[When] 點擊個人檔案連結');
@@ -134,7 +134,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
         // Then: 應該導航到個人檔案頁面
         console.log('[Then] 驗證導航到個人檔案頁面');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
         expect(page.url()).toContain('/profile');
         console.log('✅ 成功導航到個人檔案頁面');
 
@@ -153,7 +153,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // And: 我在首頁
       console.log('[And] 在首頁');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我點擊排行榜連結
       console.log('[When] 點擊排行榜連結');
@@ -163,7 +163,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Then: 應該導航到排行榜頁面
       console.log('[Then] 驗證導航到排行榜頁面');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       expect(page.url()).toContain('/leaderboard');
       console.log('✅ 成功導航到排行榜頁面');
 
@@ -178,7 +178,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // Test Case 1: 在首頁時，首頁連結應該高亮
       console.log('\n[Test Case 1] 在首頁時');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       const homeLink = page.locator('[data-testid="sidebar-nav-"]');
       const homeLinkClasses = await homeLink.getAttribute('class');
@@ -188,7 +188,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('\n[Test Case 2] 在課程頁面時');
       const coursesLink = page.locator('[data-testid="sidebar-nav-courses"]');
       await coursesLink.click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       const coursesLinkClasses = await coursesLink.getAttribute('class');
       console.log(`課程連結 class: ${coursesLinkClasses}`);
@@ -231,7 +231,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
         try {
           await expect(link).toBeVisible({ timeout: 5000 });
           await link.click();
-          await page.waitForLoadState('networkidle');
+          await page.waitForLoadState('load');
 
           expect(page.url()).toContain(linkTest.expectedUrl);
           console.log(`✅ ${linkTest.label} 連結正確指向 ${linkTest.expectedUrl}`);
@@ -253,7 +253,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       // And: 我訪問首頁
       console.log('[And] 訪問首頁');
       await page.goto('http://localhost:3000');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我尋找 sidebar 收合按鈕並點擊
       console.log('[When] 尋找並點擊 sidebar 收合按鈕');

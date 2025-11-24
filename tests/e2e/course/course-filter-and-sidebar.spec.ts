@@ -30,7 +30,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Then: 應該看到課程卡片列表
       console.log('[Then] 驗證課程卡片存在');
@@ -60,7 +60,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // And: 我在課程列表頁面
       console.log('[And] 訪問課程列表頁面');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我點擊第一個課程卡片
       console.log('[When] 點擊第一個課程卡片');
@@ -77,7 +77,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         const href = await courseLink.getAttribute('href');
 
         await firstCard.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Then: 應該導航到課程詳細頁面
         console.log('[Then] 驗證導航到課程詳細頁面');
@@ -102,7 +102,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程列表頁面
       console.log('[When] 訪問課程列表頁面');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Then: 記錄初始的 sidebar 狀態
       console.log('[Then] 記錄初始 sidebar 導航項目');
@@ -115,7 +115,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Then: sidebar 應該更新
         console.log('[Then] 驗證 sidebar 更新');
@@ -154,7 +154,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程列表
       console.log('[When] 訪問課程列表');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // And: 我點擊課程卡片
       console.log('[And] 點擊課程卡片');
@@ -165,7 +165,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log(`點擊的課程: ${cardText?.substring(0, 30)}...`);
 
         await courseCards.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Then: 驗證 URL 格式
         console.log('[Then] 驗證 URL 格式');
@@ -190,7 +190,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // And: 我訪問課程列表
       console.log('[And] 訪問課程列表');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // When: 我點擊第一個課程
       console.log('[When] 點擊第一個課程');
@@ -199,19 +199,19 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       if (await courseCards.count() >= 2) {
         // 記錄第一個課程的 URL
         await courseCards.nth(0).click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
         const firstCourseUrl = page.url();
         console.log(`第一個課程 URL: ${firstCourseUrl}`);
 
         // And: 回到課程列表並點擊第二個課程
         console.log('[And] 回到課程列表');
         await page.goto('/courses');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         console.log('[And] 點擊第二個課程');
         const updatedCourseCards = page.locator('[data-testid="course-card"]');
         await updatedCourseCards.nth(1).click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
         const secondCourseUrl = page.url();
         console.log(`第二個課程 URL: ${secondCourseUrl}`);
 
@@ -236,13 +236,13 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程列表並選擇一個課程
       console.log('[When] 訪問課程列表並選擇課程');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       const courseCards = page.locator('[data-testid="course-card"]');
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Then: 檢查 sidebar 中是否有課程相關的導航項目
         console.log('[Then] 驗證 sidebar 中的課程相關項目');
@@ -286,14 +286,14 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       console.log('[And] 訪問課程列表');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       const courseCards = page.locator('[data-testid="course-card"]');
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         console.log('[And] 選擇課程');
         await courseCards.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // When: 我尋找並點擊 sidebar 中的「所有單元」項目
         console.log('[When] 尋找並點擊「所有單元」項目');
@@ -306,7 +306,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
           console.log(`所有單元連結: ${href}`);
 
           await unitsLink.click();
-          await page.waitForLoadState('networkidle');
+          await page.waitForLoadState('load');
 
           // Then: 應該導航到該課程的單元頁面
           console.log('[Then] 驗證導航');
@@ -333,7 +333,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Then: 列出所有課程卡片
       console.log('[Then] 列出可用的課程');
@@ -351,7 +351,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         console.log(`課程名稱: ${cardText?.substring(0, 50)}...`);
 
         await card.click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         const courseUrl = page.url();
         console.log(`課程 URL: ${courseUrl}`);
@@ -365,7 +365,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
         if (i < courseCount - 1) {
           console.log('[回到課程列表]');
           await page.goto('/courses');
-          await page.waitForLoadState('networkidle');
+          await page.waitForLoadState('load');
         }
       }
 
@@ -380,7 +380,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
       // When: 我訪問課程頁面
       console.log('[When] 訪問課程頁面');
       await page.goto('/courses');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // And: 我選擇一個課程
       console.log('[And] 選擇課程');
@@ -388,7 +388,7 @@ test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
 
       if (await courseCards.first().isVisible().catch(() => false)) {
         await courseCards.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Then: 驗證 sidebar 導航項目仍然可點擊
         console.log('[Then] 驗證 sidebar 項目可點擊性');
