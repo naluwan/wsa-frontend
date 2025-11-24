@@ -94,25 +94,32 @@ export default function CoursesPage() {
           setCourses(data)
 
           // 為每個有免費試看的課程獲取第一個免費單元
-          data.forEach(async (course: Course) => {
+          const freePreviewPromises = data.map(async (course: Course) => {
             if (course.hasFreePreview) {
-              const detailRes = await fetch(`/api/courses/${course.code}`)
-              if (detailRes.ok) {
-                const detail = await detailRes.json()
-                // 找到第一個免費試看單元
-                for (const section of detail.sections) {
-                  const freeUnit = section.units.find((u: any) => u.isFreePreview)
-                  if (freeUnit) {
-                    setFirstFreeUnits(prev => ({
-                      ...prev,
-                      [course.code]: freeUnit.unitId
-                    }))
-                    break
+              try {
+                const detailRes = await fetch(`/api/courses/${course.code}`)
+                if (detailRes.ok) {
+                  const detail = await detailRes.json()
+                  // 找到第一個免費試看單元
+                  for (const section of detail.sections) {
+                    const freeUnit = section.units.find((u: any) => u.isFreePreview)
+                    if (freeUnit) {
+                      setFirstFreeUnits(prev => ({
+                        ...prev,
+                        [course.code]: freeUnit.unitId
+                      }))
+                      break
+                    }
                   }
                 }
+              } catch (error) {
+                console.error(`獲取課程 ${course.code} 免費單元失敗:`, error)
               }
             }
           })
+
+          // 等待所有免費單元請求完成
+          await Promise.all(freePreviewPromises)
         }
       } catch (error) {
         console.error('獲取課程資料失敗:', error)

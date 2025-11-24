@@ -314,7 +314,7 @@ export function AppSidebar({ isCollapsed, onToggle, isAuthenticated = true }: Ap
                         isCollapsed && "justify-center px-2"
                       )}
                       title={isCollapsed ? item.title : undefined}
-                      data-testid={`sidebar-nav-${item.href.replace(/\//g, '-')}`}
+                      data-testid={`sidebar-nav-${item.href.slice(1).replace(/\//g, '-')}`}
                     >
                       <Icon className="h-5 w-5 flex-shrink-0" />
                       {!isCollapsed && (
