@@ -17,10 +17,7 @@ test.describe('登入保護與對話框', () => {
   });
 
   test('未登入時點擊「試聽課程」按鈕應顯示登入對話框', async ({ page }) => {
-    // Given: 我在首頁，尚未登入
-    await page.goto('http://localhost:3000');
-    await page.waitForLoadState('networkidle');
-
+    // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
     await page.waitForLoadState('networkidle');
@@ -49,10 +46,7 @@ test.describe('登入保護與對話框', () => {
   });
 
   test('未登入時點擊「立刻購買」按鈕應顯示登入對話框或導向登入頁', async ({ page }) => {
-    // Given: 我在首頁，尚未登入
-    await page.goto('http://localhost:3000');
-    await page.waitForLoadState('networkidle');
-
+    // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
     await page.waitForLoadState('networkidle');
@@ -84,10 +78,7 @@ test.describe('登入保護與對話框', () => {
   });
 
   test('登入對話框中的「前往登入」按鈕應正確導向登入頁', async ({ page }) => {
-    // Given: 我在首頁，尚未登入
-    await page.goto('http://localhost:3000');
-    await page.waitForLoadState('networkidle');
-
+    // Given: 我尚未登入
     // When: 我前往課程列表頁
     await page.goto('/courses');
     await page.waitForLoadState('networkidle');
