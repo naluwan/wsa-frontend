@@ -21,15 +21,18 @@ export async function GET(request: NextRequest) {
   // 解碼 returnUrl，預設為首頁
   const returnUrl = state ? decodeURIComponent(state) : "/";
 
+  // 獲取當前的 base URL（根據環境自動選擇）
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
   // 檢查是否有授權碼，若沒有則導回登入頁
   if (!code) {
-    return NextResponse.redirect("http://localhost:3000/login");
+    return NextResponse.redirect(`${baseUrl}/login`);
   }
 
   try {
     // 步驟 1: 使用授權碼向 Facebook 交換 access token
-    // 開發環境使用固定的 localhost:3000
-    const redirectUri = "http://localhost:3000/api/auth/facebook/callback";
+    // 使用環境變數決定 redirect URI
+    const redirectUri = `${baseUrl}/api/auth/facebook/callback`;
 
     const tokenUrl = new URL("https://graph.facebook.com/v18.0/oauth/access_token");
     tokenUrl.searchParams.append("client_id", process.env.NEXT_PUBLIC_FACEBOOK_APP_ID!);
@@ -97,14 +100,14 @@ export async function GET(request: NextRequest) {
     });
 
     // 步驟 5: 登入成功，導向 returnUrl 或首頁
-    // 強制使用 localhost:3000 避免跳轉到容器內部主機名
+    // 使用環境變數決定 base URL
     // 使用 303 重定向確保瀏覽器完全重新載入頁面
-    const redirectUrl = `http://localhost:3000${returnUrl}`;
+    const redirectUrl = `${baseUrl}${returnUrl}`;
     const response = NextResponse.redirect(redirectUrl, 303);
     return response;
   } catch (error) {
     // 若發生任何錯誤，導回登入頁並顯示錯誤訊息
     console.error("Facebook OAuth callback error:", error);
-    return NextResponse.redirect("http://localhost:3000/login?error=oauth_failed");
+    return NextResponse.redirect(`${baseUrl}/login?error=oauth_failed`);
   }
 }
