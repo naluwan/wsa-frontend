@@ -1,39 +1,27 @@
 /**
  * 課程上下文 (Course Context)
  * 管理當前選擇的課程，並在整個應用中共享課程狀態
+ *
+ * 使用 Journey API 的 slug 作為課程識別
  */
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import type { JourneyListItem } from "@/types/journey";
 
-// 課程類型定義
-export type CourseType = "DESIGN_PATTERNS" | "AI_BDD";
-
-// 課程資訊介面
+// 課程資訊介面（對應 Journey）
 export interface Course {
-  id: CourseType;
-  name: string;
-  code: string;
+  id: number;           // Journey external ID
+  name: string;         // Journey name
+  slug: string;         // Journey slug (用於 API 路由)
 }
-
-// 可用的課程列表
-export const AVAILABLE_COURSES: Course[] = [
-  {
-    id: "DESIGN_PATTERNS",
-    name: "軟體設計模式精通之旅",
-    code: "SOFTWARE_DESIGN_PATTERN",
-  },
-  {
-    id: "AI_BDD",
-    name: "AI x BDD：規格驅動全自動開發術",
-    code: "AI_X_BDD",
-  },
-];
 
 // 課程上下文值的型別
 interface CourseContextValue {
-  currentCourse: Course;
+  currentCourse: Course | null;
   setCurrentCourse: (course: Course) => void;
+  availableCourses: Course[];
+  loading: boolean;
 }
 
 // 建立課程上下文
@@ -41,13 +29,45 @@ const CourseContext = createContext<CourseContextValue | undefined>(undefined);
 
 // 課程提供者組件
 export function CourseProvider({ children }: { children: ReactNode }) {
-  // 預設選擇第一個課程（軟體設計模式精通之旅）
-  const [currentCourse, setCurrentCourse] = useState<Course>(
-    AVAILABLE_COURSES[0]
-  );
+  const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 從 API 獲取課程列表
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch('/api/journeys');
+        if (res.ok) {
+          const data: JourneyListItem[] = await res.json();
+          const courses: Course[] = data.map(j => ({
+            id: j.id,
+            name: j.name,
+            slug: j.slug,
+          }));
+          setAvailableCourses(courses);
+
+          // 預設選擇第一個課程
+          if (courses.length > 0 && !currentCourse) {
+            setCurrentCourse(courses[0]);
+          }
+        }
+      } catch (error) {
+        console.error('獲取課程列表失敗:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
 
   return (
-    <CourseContext.Provider value={{ currentCourse, setCurrentCourse }}>
+    <CourseContext.Provider value={{
+      currentCourse,
+      setCurrentCourse,
+      availableCourses,
+      loading
+    }}>
       {children}
     </CourseContext.Provider>
   );

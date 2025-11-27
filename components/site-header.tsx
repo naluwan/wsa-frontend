@@ -25,6 +25,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
 import { User, LogOut, Users, Sun, Moon, Bell, Map, ChevronDown, Menu, RotateCcw } from "lucide-react"
 import { useTheme } from "next-themes"
@@ -45,7 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCourse, AVAILABLE_COURSES } from "@/contexts/course-context"
+import { useCourse } from "@/contexts/course-context"
 import { MobileSidebar } from "@/components/mobile-sidebar"
 import { useSidebar } from "@/contexts/sidebar-context"
 import { cn } from "@/lib/utils"
@@ -80,7 +81,7 @@ export function SiteHeader() {
   const router = useRouter()
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
-  const { currentCourse, setCurrentCourse } = useCourse()
+  const { currentCourse, setCurrentCourse, availableCourses, loading: coursesLoading } = useCourse()
   const { isCollapsed, toggleSidebar } = useSidebar()
   const [user, setUser] = React.useState<UserData | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
@@ -103,12 +104,16 @@ export function SiteHeader() {
   // 檢查是否為認證頁面（登入頁面）
   const isAuthPage = pathname.startsWith('/login')
 
+  // 檢查是否為訂單頁面
+  const isOrderPage = pathname.startsWith('/orders')
+
   // 檢查是否為課程學習頁面
   const isJourneyPage = pathname.startsWith('/journeys/')
 
   // 檢查是否應該顯示「前往挑戰」按鈕
-  // 當選擇 AI_BDD 課程時，隱藏此按鈕
-  const shouldShowChallengeButton = !isAuthPage && currentCourse.id !== "AI_BDD"
+  // 當選擇 AI x BDD 課程時，隱藏此按鈕
+  // 當在挑戰地圖頁面時，也隱藏此按鈕
+  const shouldShowChallengeButton = !isAuthPage && currentCourse?.slug !== "ai-bdd" && !pathname.includes('/roadmap')
 
   // 確保主題切換器已完成載入（避免 hydration mismatch）
   React.useEffect(() => {
@@ -253,25 +258,59 @@ export function SiteHeader() {
   /**
    * 課程選擇變更處理函式
    */
-  const handleCourseChange = (courseId: string) => {
-    const course = AVAILABLE_COURSES.find(c => c.id === courseId)
+  const handleCourseChange = (slug: string) => {
+    const course = availableCourses.find(c => c.slug === slug)
     if (course) {
       setCurrentCourse(course)
     }
+  }
+
+  // 認證頁面不顯示 header
+  if (isAuthPage) {
+    return null
+  }
+
+  // 訂單頁面使用簡化版 header
+  if (isOrderPage) {
+    return (
+      <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="relative flex h-full items-center px-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/images/logo.png"
+              alt="WSA"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
+            <div className="flex flex-col justify-center">
+              <span className="text-sm font-bold text-foreground">
+                水球軟體學院
+              </span>
+              <span className="text-xs text-muted-foreground">
+                WATERBALLSA.TW
+              </span>
+            </div>
+          </Link>
+        </div>
+      </header>
+    )
   }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="relative flex h-full items-center px-6">
         {/* 課程學習頁面的漢堡排（桌面版在 sidebar 旁邊，手機版固定在左側）*/}
-        {isJourneyPage && (
+        {/* 注意：挑戰地圖頁面不顯示漢堡排 */}
+        {isJourneyPage && !pathname.includes('/roadmap') && (
           <button
             onClick={toggleSidebar}
             className={cn(
               "absolute z-50 flex h-10 w-10 items-center justify-center bg-background hover:bg-muted border rounded transition-all duration-300",
               // 手機版固定在左側，桌面版跟隨 sidebar（加間距）
               "left-4 md:transition-all md:duration-300",
-              !isCollapsed && "md:left-[272px]" // 264px (sidebar) + 8px (間距)
+              !isCollapsed && "md:left-[308px]" // 300px (sidebar) + 8px (間距)
             )}
           >
             <Menu className="h-5 w-5" />
@@ -298,11 +337,11 @@ export function SiteHeader() {
           </Link>
         )}
 
-        {/* 中間區域：課程選擇下拉選單（非登入頁面且非課程學習頁面）*/}
-        {!isAuthPage && !isJourneyPage && (
+        {/* 中間區域：課程選擇下拉選單（非登入頁面且非課程學習頁面且非挑戰地圖頁面）*/}
+        {!isAuthPage && !isJourneyPage && !pathname.includes('/roadmap') && currentCourse && (
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Select
-              value={currentCourse.id}
+              value={currentCourse.slug}
               onValueChange={handleCourseChange}
             >
               <SelectTrigger className="w-[280px] md:w-[350px]">
@@ -311,8 +350,8 @@ export function SiteHeader() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {AVAILABLE_COURSES.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
+                {availableCourses.map((course) => (
+                  <SelectItem key={course.slug} value={course.slug}>
                     {course.name}
                   </SelectItem>
                 ))}
@@ -331,7 +370,7 @@ export function SiteHeader() {
               size="sm"
               className={shouldShowChallengeButton ? '' : 'invisible pointer-events-none'}
             >
-              <Link href="/map" className="inline-flex items-center justify-center gap-2 w-full h-full">
+              <Link href="/journeys/software-design-pattern/roadmap" className="inline-flex items-center justify-center gap-2 w-full h-full">
                 <Map className="h-4 w-4" />
                 <span className="hidden sm:inline">前往挑戰</span>
               </Link>
@@ -492,7 +531,7 @@ export function SiteHeader() {
                 {/* 選單項目 */}
                 <div className="py-1">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer px-4 py-2" data-testid="profile-link">
+                    <Link href="/users/me/profile" className="cursor-pointer px-4 py-2" data-testid="profile-link">
                       <User className="mr-2 h-4 w-4" />
                       個人檔案
                     </Link>

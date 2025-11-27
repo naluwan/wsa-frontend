@@ -2,6 +2,11 @@
  * AppSidebar 組件 - 應用側邊欄
  * 左側可收合的導覽側邊欄
  * 根據當前選擇的課程動態顯示不同的導航項目
+ *
+ * 導覽連結說明：
+ * - 「課程」(/courses)：課程列表頁（主要入口，顯示所有課程 card）
+ * - 「所有單元」(/journeys)：目前選取課程的章節＋單元總覽頁（依賴 currentCourse context）
+ *   注意：需要先在 /courses 選擇課程後，此頁面才能正常顯示內容
  */
 "use client";
 
@@ -44,7 +49,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "個人檔案",
-        href: "/profile",
+        href: "/users/me/profile",
         icon: User,
       },
     ],
@@ -63,7 +68,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "挑戰歷程",
-        href: "/journeys",
+        href: "/users/me/portfolio",
         icon: LineChart,
       },
     ],
@@ -72,12 +77,12 @@ const designPatternsNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
         title: "挑戰地圖",
-        href: "/map",
+        href: "/journeys/software-design-pattern/roadmap",
         icon: Map,
       },
       {
@@ -105,7 +110,7 @@ const aiBddNavGroups = [
       },
       {
         title: "個人檔案",
-        href: "/profile",
+        href: "/users/me/profile",
         icon: User,
       },
     ],
@@ -123,7 +128,7 @@ const aiBddNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
@@ -164,12 +169,12 @@ const unauthenticatedDesignPatternsNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
         title: "挑戰地圖",
-        href: "/map",
+        href: "/journeys/software-design-pattern/roadmap",
         icon: Map,
       },
       {
@@ -210,7 +215,7 @@ const unauthenticatedAiBddNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
@@ -233,16 +238,18 @@ export function AppSidebar({ isCollapsed, onToggle, isAuthenticated = true }: Ap
   const { currentCourse } = useCourse();
 
   // 根據當前課程和登入狀態選擇導航項目
+  // AI x BDD 課程使用 slug "ai-bdd"
+  const isAiBdd = currentCourse?.slug === "ai-bdd";
   const navGroups = isAuthenticated
-    ? (currentCourse.id === "AI_BDD" ? aiBddNavGroups : designPatternsNavGroups)
-    : (currentCourse.id === "AI_BDD" ? unauthenticatedAiBddNavGroups : unauthenticatedDesignPatternsNavGroups);
+    ? (isAiBdd ? aiBddNavGroups : designPatternsNavGroups)
+    : (isAiBdd ? unauthenticatedAiBddNavGroups : unauthenticatedDesignPatternsNavGroups);
 
   return (
     <aside
       className={cn(
         "fixed left-0 top-0 h-screen bg-background border-r transition-all duration-300 z-50",
         "hidden lg:block", // 手機版隱藏，桌面版顯示
-        isCollapsed ? "w-16" : "w-64"
+        isCollapsed ? "w-16" : "w-[300px]"
       )}
     >
       {/* 側邊欄內容 */}
@@ -298,9 +305,10 @@ export function AppSidebar({ isCollapsed, onToggle, isAuthenticated = true }: Ap
               <div className="py-2">
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  // 特別處理 /journeys：只在完全匹配時才算 active，避免與子路徑（如 roadmap）衝突
                   const isActive =
                     pathname === item.href ||
-                    (item.href !== "/" && pathname.startsWith(item.href + "/"));
+                    (item.href !== "/" && item.href !== "/journeys" && pathname.startsWith(item.href + "/"));
 
                   return (
                     <Link

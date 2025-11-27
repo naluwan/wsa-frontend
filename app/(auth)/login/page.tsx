@@ -198,21 +198,21 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-[#2a3142] border-[#3a4152]">
         <CardHeader className="space-y-6 text-center">
           {/* Logo 和網站名稱 */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3">
-              <div className="relative w-16 h-16 flex-shrink-0">
-                <Image
-                  src="/images/logo.png"
-                  alt="WSA Logo"
-                  width={64}
-                  height={64}
-                  className="rounded-lg"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-xl font-bold text-white">水球軟體學院</p>
-                <p className="text-sm text-gray-400">WATERBALLSA.TW</p>
-              </div>
+          <div className="flex items-center gap-3 justify-center">
+            <Image
+              src="/images/logo.png"
+              alt="WSA"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
+            <div className="flex flex-col justify-center items-start">
+              <span className="text-sm font-bold text-white">
+                水球軟體學院
+              </span>
+              <span className="text-xs text-gray-400">
+                WATERBALLSA.TW
+              </span>
             </div>
           </div>
 

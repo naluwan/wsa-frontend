@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
     // 步驟 5: 登入成功，導向 returnUrl 或首頁
     // 使用環境變數決定 base URL
     // 使用 303 重定向確保瀏覽器完全重新載入頁面
-    const redirectUrl = `${baseUrl}${returnUrl}`;
+    // 如果 returnUrl 是外部 URL（以 http 開頭），直接使用；否則加上 baseUrl
+    const redirectUrl = returnUrl.startsWith('http') ? returnUrl : `${baseUrl}${returnUrl}`;
     const response = NextResponse.redirect(redirectUrl, 303);
     return response;
   } catch (error) {

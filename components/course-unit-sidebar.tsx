@@ -12,6 +12,9 @@ import {
   PlayCircle,
   Lock,
   CheckCircle2,
+  Circle,
+  FileText,
+  ClipboardList,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -30,15 +33,16 @@ import {
 import { useSidebar } from "@/contexts/sidebar-context"
 
 /**
- * 單元摘要型別
+ * 單元摘要型別（對應 LessonSummary）
  */
 interface UnitSummary {
-  id: string
-  unitId: string
+  id: number
+  unitId: string  // 保持字串以兼容現有邏輯
   title: string
   type: string
   orderIndex: number
   sectionTitle: string
+  chapterId: number  // 新增：章節 ID
   orderInSection: number
   isFreePreview: boolean
   canAccess: boolean
@@ -50,11 +54,14 @@ interface UnitSummary {
  */
 interface Section {
   sectionTitle: string
+  chapterId: number  // 新增：章節 ID
+  orderIndex: number // 原始排序
+  passwordRequired: boolean // 是否需要密碼
   units: UnitSummary[]
 }
 
 /**
- * 課程詳情型別
+ * 課程詳情型別（對應 Journey API 回應）
  */
 interface CourseDetail {
   course: {
@@ -71,20 +78,41 @@ interface CourseUnitSidebarProps {
 }
 
 /**
- * 渲染單元 icon
+ * 渲染單元左側 icon（類型圖示）
+ * - 無法存取（未購買的付費課程）→ 鎖 icon
+ * - video → 播放 icon
+ * - scroll → 文件 icon
+ * - google-form → 表單 icon
  */
-const renderUnitIcon = (unit: UnitSummary) => {
-  if (unit.isCompleted) {
-    return <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-  }
+const renderUnitTypeIcon = (unit: UnitSummary, isActive: boolean) => {
+  // 無法存取 → 顯示鎖
   if (!unit.canAccess) {
-    return <Lock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+    return <Lock className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-muted-foreground")} />
   }
-  return unit.isFreePreview ? (
-    <PlayCircle className="h-5 w-5 text-blue-500 flex-shrink-0" />
-  ) : (
-    <PlayCircle className="h-5 w-5 text-foreground flex-shrink-0" />
-  )
+
+  // 根據 type 顯示不同 icon
+  switch (unit.type) {
+    case 'video':
+      return <PlayCircle className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
+    case 'scroll':
+      return <FileText className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
+    case 'google-form':
+      return <ClipboardList className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
+    default:
+      return <PlayCircle className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-foreground")} />
+  }
+}
+
+/**
+ * 渲染單元右側 icon（完成狀態）
+ */
+const renderUnitStatusIcon = (unit: UnitSummary, isActive: boolean) => {
+  if (unit.isCompleted) {
+    // 已完成：實心打勾圈圈
+    return <CheckCircle2 className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-green-500")} />
+  }
+  // 未完成：虛線圈圈
+  return <Circle className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white/50" : "text-muted-foreground/50")} strokeDasharray="3 3" />
 }
 
 /**
@@ -153,15 +181,6 @@ const SidebarContent = React.memo(({
         </div>
       ) : courseDetail ? (
         <>
-          {/* 課程標題 - 收合時不顯示 */}
-          {!showCollapsed && (
-            <div className="p-4">
-              <h2 className="text-sm font-bold line-clamp-2">
-                {courseDetail.course.title}
-              </h2>
-            </div>
-          )}
-
           {/* 單元列表 */}
           <div className="flex-1 overflow-y-auto">
             {!showCollapsed ? (
@@ -174,12 +193,13 @@ const SidebarContent = React.memo(({
                   <AccordionItem
                     key={`section-${sectionIndex}`}
                     value={`section-${sectionIndex}`}
+                    className="border-b-0"
                   >
-                    <AccordionTrigger className="text-xs font-semibold hover:no-underline py-2">
+                    <AccordionTrigger className="text-xs font-semibold hover:no-underline py-4">
                       <span className="line-clamp-1">{section.sectionTitle}</span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="space-y-1 pt-1">
+                      <div className="space-y-1">
                         {section.units.map((unit) => {
                           const isActive = unit.unitId === currentUnitId
 
@@ -188,43 +208,29 @@ const SidebarContent = React.memo(({
                               key={unit.id}
                               onClick={() => onUnitClick(unit)}
                               className={cn(
-                                "w-full text-left px-2 py-2 rounded-md flex items-start gap-2 transition-colors",
+                                "w-full text-left px-[10px] py-[0.75rem] rounded-[20px] flex items-start gap-[10px] transition-colors",
                                 isActive
-                                  ? "bg-yellow-600 text-white"
+                                  ? "bg-yellow-600 text-white font-medium"
                                   : "hover:bg-muted"
                               )}
                               data-testid="unit-list-item"
                             >
-                              {renderUnitIcon(unit)}
-                              <div className="flex-1 min-w-0">
-                                <p className={cn(
-                                  "text-xs line-clamp-2",
-                                  isActive ? "font-semibold" : ""
-                                )}
-                                data-testid="unit-title"
-                                >
-                                  {unit.title}
-                                </p>
-                                <div className="flex gap-1 mt-1">
-                                  {unit.isFreePreview && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px] px-1 py-0"
-                                      data-testid="free-preview-badge"
-                                    >
-                                      試看
-                                    </Badge>
-                                  )}
-                                  {unit.isCompleted && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-[10px] px-1 py-0"
-                                      data-testid="completed-badge"
-                                    >
-                                      已完成
-                                    </Badge>
-                                  )}
-                                </div>
+                              {/* 左側類型圖示 */}
+                              <div className="pt-[2px]">
+                                {renderUnitTypeIcon(unit, isActive)}
+                              </div>
+                              {/* 標題（允許換行） */}
+                              <span className={cn(
+                                "text-sm flex-1 min-w-0 leading-relaxed",
+                                isActive ? "font-medium" : ""
+                              )}
+                              data-testid="unit-title"
+                              >
+                                {unit.title}
+                              </span>
+                              {/* 右側完成狀態圖示 */}
+                              <div className="pt-[2px]">
+                                {renderUnitStatusIcon(unit, isActive)}
                               </div>
                             </button>
                           )
@@ -253,7 +259,7 @@ const SidebarContent = React.memo(({
                         title={unit.title}
                         data-testid="unit-list-item-collapsed"
                       >
-                        {renderUnitIcon(unit)}
+                        {renderUnitTypeIcon(unit, isActive)}
                       </button>
                     )
                   })
@@ -281,17 +287,93 @@ export function CourseUnitSidebar({
   const [loading, setLoading] = React.useState(true)
   const [isMobile, setIsMobile] = React.useState(false)
 
-  // 載入課程詳情
+  // 載入課程詳情（使用 Journey API）
   React.useEffect(() => {
     if (!courseCode) return
 
     async function fetchCourseDetail() {
       try {
         setLoading(true)
-        const res = await fetch(`/api/courses/${courseCode}`)
-        if (res.ok) {
-          const data: CourseDetail = await res.json()
-          setCourseDetail(data)
+
+        // 同時取得 journey 詳情、chapters 和使用者進度
+        const [journeyRes, chaptersRes, progressRes] = await Promise.all([
+          fetch(`/api/journeys/${courseCode}`),
+          fetch(`/api/journeys/${courseCode}/chapters`),
+          fetch(`/api/journeys/${courseCode}/progress`)
+        ])
+
+        // 取得已完成的 lesson IDs
+        let completedLessonIds: number[] = []
+        if (progressRes.ok) {
+          const progressData = await progressRes.json()
+          completedLessonIds = progressData.completedLessonIds || []
+        }
+
+        if (journeyRes.ok && chaptersRes.ok) {
+          const journey = await journeyRes.json()
+          const chapters = await chaptersRes.json()
+
+          // 過濾章節：
+          // 1. 隱藏需要密碼的章節（passwordRequired: true）- 副本七
+          // 2. 隱藏只有單一 lesson 且無免費內容的章節 - 副本六
+          // 並調整排序（「課程介紹＆試聽」排到最前面）
+          const filteredChapters = chapters
+            .filter((chapter: any) => {
+              // 隱藏需要密碼的章節（副本七）
+              if (chapter.passwordRequired) return false
+
+              const lessons = chapter.lessons || []
+              const hasFreeLesson = lessons.some((lesson: any) => !lesson.premiumOnly)
+
+              // 如果有免費 lesson，顯示該章節
+              if (hasFreeLesson) return true
+
+              // 如果只有 1 個 lesson 且都是付費的，隱藏該章節（副本六）
+              if (lessons.length <= 1) return false
+
+              // 其他情況（有多個付費 lesson），顯示該章節
+              return true
+            })
+            .map((chapter: any) => ({
+              ...chapter,
+              // 「課程介紹＆試聽」章節放到最前面（假設名稱包含「試聽」或「介紹」）
+              sortOrder: chapter.name.includes('試聽') || chapter.name.includes('介紹') ? -1 : chapter.orderIndex
+            }))
+            .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+
+          // 判斷使用者是否已購買此旅程
+          const isOwned = journey.isOwned ?? false
+
+          // 轉換為 CourseDetail 格式
+          const courseDetail: CourseDetail = {
+            course: {
+              code: journey.slug,
+              title: journey.name,
+              isOwned: isOwned,
+            },
+            sections: filteredChapters.map((chapter: any) => ({
+              sectionTitle: chapter.name,
+              chapterId: chapter.id,
+              orderIndex: chapter.orderIndex,
+              passwordRequired: chapter.passwordRequired,
+              units: chapter.lessons.map((lesson: any) => ({
+                id: lesson.id,
+                unitId: String(lesson.id),
+                title: lesson.name,
+                type: lesson.type,
+                orderIndex: lesson.orderIndex,
+                sectionTitle: chapter.name,
+                chapterId: chapter.id,
+                orderInSection: lesson.orderIndex,
+                isFreePreview: !lesson.premiumOnly,
+                // 已購買 → 全部可存取；未購買 → 只有免費課程可存取
+                canAccess: isOwned || !lesson.premiumOnly,
+                isCompleted: completedLessonIds.includes(lesson.id),
+              }))
+            }))
+          }
+
+          setCourseDetail(courseDetail)
         }
       } catch (error) {
         console.error('載入課程詳情失敗:', error)
@@ -329,7 +411,8 @@ export function CourseUnitSidebar({
    * 處理單元點擊
    */
   const handleUnitClick = React.useCallback((unit: UnitSummary) => {
-    router.push(`/journeys/${courseCode}/missions/${unit.unitId}`)
+    // URL 格式：/journeys/{slug}/chapters/{chapterId}/missions/{lessonId}
+    router.push(`/journeys/${courseCode}/chapters/${unit.chapterId}/missions/${unit.unitId}`)
   }, [router, courseCode])
 
   /**
@@ -344,7 +427,7 @@ export function CourseUnitSidebar({
       {/* 桌面版：固定 Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-screen bg-background border-r transition-all duration-300 z-40 w-64",
+          "fixed left-0 top-0 h-screen bg-background border-r transition-all duration-300 z-40 w-[300px]",
           "hidden md:block", // 手機版隱藏，桌面版顯示
           isCollapsed && "-translate-x-full"
         )}
@@ -361,7 +444,7 @@ export function CourseUnitSidebar({
       {/* 手機版：Sheet（只在手機版渲染）*/}
       {isMobile && (
         <Sheet open={!isCollapsed} onOpenChange={(open) => setIsCollapsed(!open)}>
-          <SheetContent side="left" className="w-64 p-0">
+          <SheetContent side="left" className="w-[300px] p-0">
             <SidebarContent
               showCollapsed={false}
               onLogoClick={handleLogoClick}

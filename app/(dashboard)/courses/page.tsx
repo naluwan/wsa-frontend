@@ -1,24 +1,38 @@
 /**
- * 課程頁面（Courses Page）
- * 顯示所有可用課程，包含：
+ * 課程列表頁（主入口）
+ *
+ * 這是一般使用者進入學習流程的主要入口頁面。
+ * 顯示所有可用課程的卡片列表，包含：
  * - 課程封面圖片
  * - 課程名稱與描述
  * - 講師名稱與擁有狀態
  * - 價格資訊
  * - 購買/已擁有狀態
- * - 試聽課程按鈕
- * - 訂單紀錄
- * - 課程選定功能（與篩選器同步）
+ * - 試聽課程按鈕（跳轉至免費試看單元）
+ * - 立刻購買按鈕（跳轉至訂單頁面）
+ * - 進入課程按鈕（已購買時，跳轉至最後觀看位置或第一個單元）
+ * - 訂單紀錄區塊（顯示使用者的訂單列表）
+ * - 課程選定功能（點擊課程卡片會更新 currentCourse context）
  *
- * 資料來源：後端 API /api/courses（真實資料）
+ * 資料來源（全部使用 Journey Domain API）：
+ * - GET /api/journeys - 取得所有旅程列表
+ * - GET /api/journeys/{slug}/chapters - 取得章節列表（用於找第一個免費試看單元）
+ * - GET /api/journeys/{slug}/last-watched - 取得最後觀看位置
+ * - GET /api/user/orders - 取得使用者訂單列表
+ * - GET /api/auth/me - 檢查登入狀態
+ *
+ * 導向路徑：
+ * - 試聽課程 → /journeys/{slug}/chapters/{chapterId}/missions/{lessonId}
+ * - 立刻購買 → /journeys/{slug}/orders?productId={journeyId}
+ * - 進入課程 → /journeys/{slug}/chapters/{chapterId}/missions/{lessonId}
  */
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { FileText, X } from "lucide-react"
+import { FileText, X, Clock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,91 +46,152 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import type { JourneyListItem, ChapterDetail, LessonSummary } from "@/types/journey"
 
 /**
- * 課程資料型別（對應後端 CourseDto）
+ * 擴展的旅程型別（加入前端需要的狀態欄位）
  */
-interface Course {
-  id: string;
-  code: string;
-  title: string;
-  description: string;
-  levelTag: string;
-  totalUnits: number;
-  coverIcon: string;
-  teacherName: string;      // 講師名稱
-  priceTwd: number;         // 價格（新台幣）
-  thumbnailUrl?: string;    // 縮圖網址（選填）
+interface Journey extends JourneyListItem {
   isOwned?: boolean;        // 是否已擁有此課程（已登入時才有值）
   hasFreePreview?: boolean; // 是否有免費試看單元
 }
 
 /**
- * 課程顯示設定（根據課程代碼）
+ * 訂單資料型別（對應後端 OrderDto）
  */
-function getCourseDisplayConfig(courseCode: string) {
-  switch (courseCode) {
-    case 'SOFTWARE_DESIGN_PATTERN':
+interface Order {
+  id: string;
+  orderNo: string;
+  userId: string;
+  courseId: string;
+  courseTitle: string;
+  courseSlug: string | null;  // 課程 slug（用於跳轉）
+  amount: number;
+  status: "pending" | "paid" | "cancelled";
+  payDeadline: string;
+  paidAt: string | null;
+  memo: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 生成訂單完成付款頁面的 URL
+ */
+function getOrderPaymentUrl(order: Order): string {
+  const slug = order.courseSlug || "software-design-pattern" // fallback
+  return `/journeys/${slug}/orders?productId=${order.courseId}&orderNumber=${order.orderNo}`
+}
+
+/**
+ * 課程顯示設定（根據 slug）
+ */
+function getJourneyDisplayConfig(slug: string) {
+  switch (slug) {
+    case 'software-design-pattern':
       return {
         image: '/images/course_0.png',
         showPromo: true,
+        hasFreePreview: true, // 有免費試聽
+        description: '用一趟旅程的時間，成為硬核的 Coding 實戰高手',
+        firstChapterId: 8,
+        firstLessonId: 8001,
       }
-    case 'AI_X_BDD':
+    case 'ai-bdd':
       return {
         image: '/images/course_1.png',
         showPromo: false,
+        hasFreePreview: false, // 僅限付費，無試聽
+        description: 'AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發',
+        firstChapterId: 4000,
+        firstLessonId: 40001,
       }
     default:
       return {
         image: '/images/course_0.png',
         showPromo: false,
+        hasFreePreview: true,
+        description: '',
+        firstChapterId: 0,
+        firstLessonId: 0,
       }
   }
+}
+
+/**
+ * 格式化日期（YYYY/MM/DD）
+ */
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "無"
+
+  const date = new Date(dateString)
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+}
+
+
+/**
+ * 檢查訂單是否已過期
+ */
+function isOrderExpired(order: Order): boolean {
+  if (order.status !== "pending") return false
+  return new Date() > new Date(order.payDeadline)
 }
 
 export default function CoursesPage() {
   const router = useRouter()
   const { currentCourse, setCurrentCourse } = useCourse()
-  const [courses, setCourses] = useState<Course[]>([])
+  const [journeys, setJourneys] = useState<Journey[]>([])
   const [loading, setLoading] = useState(true)
-  const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, string>>({})
+  const [firstFreeLessons, setFirstFreeLessons] = useState<Record<string, { chapterId: number; lessonId: number }>>({})
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [loginReturnUrl, setLoginReturnUrl] = useState<string>("")
+  const [orders, setOrders] = useState<Order[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
 
-  // 從 API 獲取課程資料
+  // 從 API 獲取旅程資料
   useEffect(() => {
-    async function fetchCourses() {
+    async function fetchJourneys() {
       try {
-        const res = await fetch('/api/courses')
+        const res = await fetch('/api/journeys')
         if (res.ok) {
-          const data = await res.json()
-          setCourses(data)
-          // 課程列表載入完成，立即設置 loading 為 false
+          const data: JourneyListItem[] = await res.json()
+          // 轉換為擴展型別，使用後端回傳的 isOwned
+          const journeysWithState: Journey[] = data.map(j => ({
+            ...j,
+            isOwned: j.isOwned ?? false, // 使用後端回傳的購買狀態
+            hasFreePreview: true, // TODO: 從後端獲取免費試看狀態
+          }))
+          setJourneys(journeysWithState)
           setLoading(false)
 
-          // 為每個有免費試看的課程獲取第一個免費單元（背景執行，不阻塞頁面載入）
-          const freePreviewPromises = data.map(async (course: Course) => {
-            if (course.hasFreePreview) {
-              try {
-                const detailRes = await fetch(`/api/courses/${course.code}`)
-                if (detailRes.ok) {
-                  const detail = await detailRes.json()
-                  // 找到第一個免費試看單元
-                  for (const section of detail.sections) {
-                    const freeUnit = section.units.find((u: any) => u.isFreePreview)
-                    if (freeUnit) {
-                      setFirstFreeUnits(prev => ({
-                        ...prev,
-                        [course.code]: freeUnit.unitId
-                      }))
-                      break
-                    }
+          // 為每個旅程獲取第一個免費試看單元（背景執行，不阻塞頁面載入）
+          const freePreviewPromises = data.map(async (journey: JourneyListItem) => {
+            try {
+              const chaptersRes = await fetch(`/api/journeys/${journey.slug}/chapters`)
+              if (chaptersRes.ok) {
+                const chapters: ChapterDetail[] = await chaptersRes.json()
+                // 找到第一個非 premium 的 lesson
+                for (const chapter of chapters) {
+                  const freeLesson = chapter.lessons.find((l: LessonSummary) => !l.premiumOnly)
+                  if (freeLesson) {
+                    setFirstFreeLessons(prev => ({
+                      ...prev,
+                      [journey.slug]: {
+                        chapterId: chapter.id,
+                        lessonId: freeLesson.id
+                      }
+                    }))
+                    // 更新該旅程的 hasFreePreview 狀態
+                    setJourneys(prev => prev.map(j =>
+                      j.slug === journey.slug ? { ...j, hasFreePreview: true } : j
+                    ))
+                    break
                   }
                 }
-              } catch (error) {
-                console.error(`獲取課程 ${course.code} 免費單元失敗:`, error)
               }
+            } catch (error) {
+              console.error(`獲取旅程 ${journey.slug} 免費單元失敗:`, error)
             }
           })
 
@@ -128,11 +203,11 @@ export default function CoursesPage() {
           setLoading(false)
         }
       } catch (error) {
-        console.error('獲取課程資料失敗:', error)
+        console.error('獲取旅程資料失敗:', error)
         setLoading(false)
       }
     }
-    fetchCourses()
+    fetchJourneys()
   }, [])
 
   // 檢查登入狀態
@@ -155,27 +230,68 @@ export default function CoursesPage() {
     checkLoginStatus()
   }, [])
 
-  // 處理課程卡片點擊
-  const handleCourseClick = (course: Course) => {
-    // 更新 context 中的當前課程
-    const courseInContext = {
-      id: course.code === 'SOFTWARE_DESIGN_PATTERN' ? 'DESIGN_PATTERNS' as const : 'AI_BDD' as const,
-      name: course.title,
-      code: course.code,
+  // 根據登入狀態獲取使用者所有訂單
+  useEffect(() => {
+    async function fetchOrders() {
+      // 如果未登入，清空訂單列表
+      if (!isLoggedIn) {
+        setOrders([])
+        return
+      }
+
+      setOrdersLoading(true)
+      try {
+        const res = await fetch('/api/user/orders')
+        if (res.ok) {
+          const data: Order[] = await res.json()
+          setOrders(data)
+        } else {
+          console.error('[CoursesPage] 獲取訂單失敗:', res.status)
+          setOrders([])
+        }
+      } catch (error) {
+        console.error('[CoursesPage] 獲取訂單錯誤:', error)
+        setOrders([])
+      } finally {
+        setOrdersLoading(false)
+      }
     }
-    setCurrentCourse(courseInContext)
+
+    fetchOrders()
+  }, [isLoggedIn])
+
+  // 根據當前選擇的課程篩選訂單
+  const filteredOrders = useMemo(() => {
+    if (!currentCourse?.slug) {
+      return orders // 如果沒有選擇課程，顯示所有訂單
+    }
+    return orders.filter(order => order.courseSlug === currentCourse.slug)
+  }, [orders, currentCourse?.slug])
+
+  // 處理旅程卡片點擊
+  const handleJourneyClick = (journey: Journey) => {
+    // 更新 context 中的當前課程
+    setCurrentCourse({
+      id: journey.id,
+      name: journey.name,
+      slug: journey.slug,
+    })
   }
+
+  // 軟體設計模式精通之旅的固定試聽課程連結
+  const SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL = '/journeys/software-design-pattern/chapters/8/missions/8001'
 
   /**
    * 處理「試聽課程」按鈕點擊
    */
-  const handlePreviewClick = (course: Course) => {
-    const targetUrl = firstFreeUnits[course.code]
-      ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
-      : `/courses/${course.code}`
+  const handlePreviewClick = (journey: Journey) => {
+    // 軟體設計模式精通之旅使用固定的試聽課程連結
+    const targetUrl = journey.slug === 'software-design-pattern'
+      ? SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL
+      : `/journeys/${journey.slug}`
 
     console.log('[CoursesPage] 點擊試聽課程:', {
-      courseCode: course.code,
+      slug: journey.slug,
       targetUrl,
       isLoggedIn,
     })
@@ -194,26 +310,43 @@ export default function CoursesPage() {
 
   /**
    * 處理「立刻購買」按鈕點擊
+   * - 未登入：直接跳轉到建立訂單頁面
+   * - 已登入：檢查是否有該課程的待付款訂單
+   *   - 有：跳轉到完成付款頁面
+   *   - 沒有：跳轉到建立訂單頁面
    */
-  const handlePurchaseClick = (course: Course) => {
-    const targetUrl = `/courses/${course.code}`
+  const handlePurchaseClick = (journey: Journey) => {
+    const createOrderUrl = `/journeys/${journey.slug}/orders?productId=${journey.id}`
 
     console.log('[CoursesPage] 點擊立刻購買:', {
-      courseCode: course.code,
-      targetUrl,
+      slug: journey.slug,
+      id: journey.id,
       isLoggedIn,
     })
 
-    // 如果未登入，顯示登入對話框
+    // 如果未登入，直接跳轉到建立訂單頁面
     if (!isLoggedIn) {
-      console.log('[CoursesPage] 未登入，顯示登入對話框')
-      setLoginReturnUrl(targetUrl)
-      setShowLoginDialog(true)
+      console.log('[CoursesPage] 未登入，直接跳轉到建立訂單頁面')
+      router.push(createOrderUrl)
       return
     }
 
-    // 如果已登入，直接導向課程詳情頁（購買邏輯在課程詳情頁處理）
-    router.push(targetUrl)
+    // 已登入：檢查是否有該課程的待付款訂單
+    const pendingOrder = orders.find(order =>
+      order.courseSlug === journey.slug &&
+      order.status === "pending" &&
+      !isOrderExpired(order)
+    )
+
+    if (pendingOrder) {
+      // 有待付款訂單，跳轉到完成付款頁面
+      console.log('[CoursesPage] 發現待付款訂單，跳轉到完成付款頁面:', pendingOrder.orderNo)
+      router.push(getOrderPaymentUrl(pendingOrder))
+    } else {
+      // 沒有待付款訂單，跳轉到建立訂單頁面
+      console.log('[CoursesPage] 無待付款訂單，跳轉到建立訂單頁面')
+      router.push(createOrderUrl)
+    }
   }
 
   /**
@@ -224,6 +357,38 @@ export default function CoursesPage() {
     router.push(`/login?returnUrl=${encodeURIComponent(loginReturnUrl)}`)
   }
 
+  /**
+   * 處理「進入課程」按鈕點擊
+   * 先呼叫 last-watched API，有資料就跳轉到最後觀看的位置，沒有就跳轉到第一個單元
+   */
+  const handleEnterCourseClick = async (journey: Journey) => {
+    const displayConfig = getJourneyDisplayConfig(journey.slug)
+
+    try {
+      // 呼叫 last-watched API
+      const res = await fetch(`/api/journeys/${journey.slug}/last-watched`)
+
+      if (res.ok) {
+        const data = await res.json()
+
+        // 如果有最後觀看記錄，跳轉到該位置
+        if (data && data.chapterId && data.lessonId) {
+          console.log('[CoursesPage] 跳轉到最後觀看位置:', data)
+          router.push(`/journeys/${journey.slug}/chapters/${data.chapterId}/missions/${data.lessonId}`)
+          return
+        }
+      }
+
+      // 沒有最後觀看記錄或 API 失敗，跳轉到第一個單元
+      console.log('[CoursesPage] 無最後觀看記錄，跳轉到第一個單元')
+      router.push(`/journeys/${journey.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+    } catch (error) {
+      console.error('[CoursesPage] 取得最後觀看位置失敗:', error)
+      // 發生錯誤時，跳轉到第一個單元
+      router.push(`/journeys/${journey.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+    }
+  }
+
   return (
     <div className="flex flex-col">
       {/* 課程列表 */}
@@ -231,21 +396,21 @@ export default function CoursesPage() {
         <div className="container px-4 md:px-6">
           {loading ? (
             <div className="text-center py-12 text-muted-foreground">載入中...</div>
-          ) : courses.length === 0 ? (
+          ) : journeys.length === 0 ? (
             // 無課程時的提示
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">目前尚無可用課程</p>
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-              {courses.map((course) => {
-                const displayConfig = getCourseDisplayConfig(course.code);
-                const isSelected = currentCourse.code === course.code;
+              {journeys.map((journey) => {
+                const displayConfig = getJourneyDisplayConfig(journey.slug);
+                const isSelected = currentCourse?.slug === journey.slug;
 
                 return (
                   <Card
-                    key={course.id}
-                    onClick={() => handleCourseClick(course)}
+                    key={journey.id}
+                    onClick={() => handleJourneyClick(journey)}
                     className={`flex flex-col overflow-hidden transition-all duration-300 cursor-pointer hover:scale-105 bg-card ${
                       isSelected
                         ? 'border-2 border-yellow-600 shadow-lg'
@@ -256,8 +421,8 @@ export default function CoursesPage() {
                     {/* 課程封面圖 */}
                     <div className="relative w-full h-48">
                       <Image
-                        src={course.thumbnailUrl ? `/${course.thumbnailUrl}` : displayConfig.image}
-                        alt={course.title}
+                        src={journey.thumbnailUrl ? `/${journey.thumbnailUrl}` : displayConfig.image}
+                        alt={journey.name}
                         fill
                         className="object-cover"
                       />
@@ -268,14 +433,14 @@ export default function CoursesPage() {
                         className="text-xl line-clamp-2"
                         data-testid="course-title"
                       >
-                        {course.title}
+                        {journey.name}
                       </CardTitle>
                       <CardDescription className="flex items-center gap-2">
                         <span className="text-lg font-semibold text-yellow-600 dark:text-yellow-500">
-                          {course.teacherName}
+                          {journey.teacherName || '水球潘'}
                         </span>
                         {/* 擁有狀態 badge */}
-                        {course.isOwned ? (
+                        {journey.isOwned ? (
                           <Badge className="bg-green-600 hover:bg-green-700 text-white">
                             已擁有
                           </Badge>
@@ -289,13 +454,13 @@ export default function CoursesPage() {
 
                     <CardContent className="flex-1">
                       <p className="text-sm text-muted-foreground line-clamp-3">
-                        {course.description}
+                        {displayConfig.description || journey.description || '暫無描述'}
                       </p>
                     </CardContent>
 
                     <CardFooter className="pt-3 flex flex-col gap-0">
                       {/* 折價券區塊（僅軟體設計模式精通之旅且未擁有時顯示）*/}
-                      {displayConfig.showPromo && !course.isOwned && (
+                      {displayConfig.showPromo && !journey.isOwned && (
                         <>
                           <div className="w-full bg-yellow-600 text-black px-4 py-4 rounded-t-md flex items-center justify-center -mx-6">
                             <span className="text-base font-bold">
@@ -310,42 +475,44 @@ export default function CoursesPage() {
                       )}
 
                       {/* 按鈕區 */}
-                      <div className={`w-full flex gap-2 ${displayConfig.showPromo && !course.isOwned ? '' : 'mt-3'}`}>
-                        {/* 試聽課程按鈕 / 僅限付費按鈕 */}
-                        {course.hasFreePreview ? (
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handlePreviewClick(course)
-                            }}
-                            className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black"
-                            size="lg"
-                            data-testid="preview-course-button"
-                          >
-                            試聽課程
-                          </Button>
-                        ) : (
-                          <Button
-                            disabled
-                            className="flex-1 bg-muted text-muted-foreground cursor-not-allowed"
-                            size="lg"
-                            onClick={(e) => e.stopPropagation()}
-                            data-testid="paid-only-button"
-                          >
-                            僅限付費
-                          </Button>
+                      <div className={`w-full flex gap-2 ${displayConfig.showPromo && !journey.isOwned ? '' : 'mt-3'}`}>
+                        {/* 試聽課程按鈕 / 僅限付費按鈕（已擁有時隱藏） */}
+                        {!journey.isOwned && (
+                          displayConfig.hasFreePreview ? (
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handlePreviewClick(journey)
+                              }}
+                              className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black"
+                              size="lg"
+                              data-testid="preview-course-button"
+                            >
+                              試聽課程
+                            </Button>
+                          ) : (
+                            <Button
+                              disabled
+                              className="flex-1 bg-muted text-muted-foreground cursor-not-allowed"
+                              size="lg"
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="paid-only-button"
+                            >
+                              僅限付費
+                            </Button>
+                          )
                         )}
 
                         {/* 立刻購買按鈕 / 進入課程按鈕 */}
-                        {course.isOwned ? (
+                        {journey.isOwned ? (
                           <Button
                             onClick={(e) => {
                               e.stopPropagation()
-                              router.push(`/courses/${course.code}`)
+                              // 呼叫 last-watched API 並跳轉
+                              handleEnterCourseClick(journey)
                             }}
-                            className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
+                            className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black"
                             size="lg"
-                            variant="outline"
                             data-testid="enter-course-button"
                           >
                             進入課程
@@ -354,7 +521,7 @@ export default function CoursesPage() {
                           <Button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handlePurchaseClick(course)
+                              handlePurchaseClick(journey)
                             }}
                             className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
                             size="lg"
@@ -384,10 +551,85 @@ export default function CoursesPage() {
                 <CardTitle className="text-2xl">訂單紀錄</CardTitle>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                目前沒有訂單紀錄
-              </div>
+            <CardContent className="space-y-4">
+              {!isLoggedIn ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  請先登入以查看訂單紀錄
+                </div>
+              ) : ordersLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  載入訂單紀錄中...
+                </div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  目前沒有訂單紀錄
+                </div>
+              ) : (
+                filteredOrders.map((order) => (
+                  <div key={order.id} className="border border-border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="grid grid-cols-3 gap-8 flex-1">
+                        <div>
+                          <p className="text-sm text-muted-foreground">訂單編號</p>
+                          <p className="font-mono font-semibold">{order.orderNo}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            {order.status === "paid" ? "付款日期" : "付款截止日期"}
+                          </p>
+                          <p className="font-semibold">
+                            {order.status === "paid" && order.paidAt
+                              ? formatDate(order.paidAt)
+                              : formatDate(order.payDeadline)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">課程名稱</p>
+                          <p className="font-semibold">{order.courseTitle}</p>
+                        </div>
+                      </div>
+                      <div>
+                        {order.status === "pending" && (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm">
+                            <Clock className="h-4 w-4" />
+                            待付款
+                          </span>
+                        )}
+                        {order.status === "paid" && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm">
+                            已付款
+                          </span>
+                        )}
+                        {order.status === "cancelled" && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-sm">
+                            已取消
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">金額</p>
+                        <p className="text-xl font-bold">NT$ {order.amount.toLocaleString()}</p>
+                        {order.memo && (
+                          <div className="mt-2">
+                            <p className="text-sm text-muted-foreground">備註</p>
+                            <p className="text-sm">{order.memo}</p>
+                          </div>
+                        )}
+                      </div>
+                      {order.status === "pending" && !isOrderExpired(order) && (
+                        <Button
+                          onClick={() => router.push(getOrderPaymentUrl(order))}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                        >
+                          立即完成訂單
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

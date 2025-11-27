@@ -1,0 +1,491 @@
+/**
+ * 課程學習頁（Journey Player Page）
+ *
+ * 功能：
+ * - 左側：課程單元清單 Sidebar（可收合，包含 Logo）
+ * - 右側：全屏播放器（自訂控制列）
+ * - 頂部：SiteHeader（包含通知、頭像等，來自 Root Layout）
+ * - 支援試看單元、未購買鎖定提示、完成單元與 XP 更新
+ * - 使用與首頁相同的 layout 結構
+ *
+ * 路由：/journeys/[slug]/chapters/[chapterId]/missions/[lessonId]
+ */
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { Lock, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
+import { CourseUnitSidebar } from "@/components/course-unit-sidebar"
+import { YoutubePlayer } from "@/components/youtube-player"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "@/contexts/sidebar-context"
+import type { LessonDetail } from "@/types/journey"
+
+/**
+ * 完成單元回應型別
+ */
+interface CompleteUnitResponse {
+  user: {
+    id: string
+    level: number
+    totalXp: number
+    weeklyXp: number
+  }
+  unit: {
+    unitId: string
+    isCompleted: boolean
+    xpEarned: number
+  }
+}
+
+export default function JourneyPlayerPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const params = useParams()
+  const { isCollapsed } = useSidebar()
+
+  // 解析 URL 參數
+  const slug = params.slug as string
+  const chapterId = params.chapterId as string
+  const lessonId = params.lessonId as string
+
+  // 資料狀態
+  const [currentLesson, setCurrentLesson] = useState<LessonDetail | null>(null)
+  const [journeyId, setJourneyId] = useState<number | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true)
+
+  // UI 狀態
+  const [showLoginDialog, setShowLoginDialog] = useState<boolean>(false)
+  const [completing, setCompleting] = useState<boolean>(false)
+  const [showCouponAlert, setShowCouponAlert] = useState<boolean>(true)
+
+  // 進度追蹤狀態（使用 ref 儲存即時進度，避免頻繁重新渲染）
+  const currentSecondsRef = useRef<number>(0)
+  const durationSecondsRef = useRef<number>(0)
+
+  // 只在需要顯示時才更新的進度百分比（減少重新渲染）
+  const [progressPercent, setProgressPercent] = useState<number>(0)
+  const [lastSavedPosition, setLastSavedPosition] = useState<number>(0)
+  const lastSaveTimeRef = useRef<number>(0)
+  const lastPercentUpdateRef = useRef<number>(0)
+
+  // 檢查登入狀態
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include',
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          const loggedIn = !!data.user
+          setIsLoggedIn(loggedIn)
+
+          // 如果未登入，顯示登入對話框
+          if (!loggedIn) {
+            setShowLoginDialog(true)
+            console.log('[JourneyPlayerPage] 未登入，顯示登入對話框')
+          } else {
+            console.log('[JourneyPlayerPage] 已登入:', data.user.displayName)
+          }
+        } else {
+          setIsLoggedIn(false)
+          setShowLoginDialog(true)
+          console.log('[JourneyPlayerPage] API 回應錯誤，顯示登入對話框')
+        }
+      } catch (error) {
+        console.error('[JourneyPlayerPage] 檢查登入狀態失敗:', error)
+        setIsLoggedIn(false)
+        setShowLoginDialog(true)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // 載入當前 Lesson 詳情和 Journey 資訊（使用 Journey API）
+  useEffect(() => {
+    if (!slug || !lessonId) return
+
+    async function fetchData() {
+      try {
+        setLoading(true)
+
+        // 同時取得 Lesson 詳情和 Journey 資訊
+        const [lessonRes, journeyRes] = await Promise.all([
+          fetch(`/api/journeys/${slug}/lessons/${lessonId}`),
+          fetch(`/api/journeys/${slug}`)
+        ])
+
+        if (lessonRes.ok) {
+          const data: LessonDetail = await lessonRes.json()
+          setCurrentLesson(data)
+
+          // 設定上次觀看位置
+          if (data.lastPositionSeconds) {
+            setLastSavedPosition(data.lastPositionSeconds)
+          }
+        } else {
+          // API 返回錯誤
+          console.error(`載入 Lesson 詳情失敗: HTTP ${lessonRes.status}`)
+          setCurrentLesson(null)
+        }
+
+        // 取得 Journey ID（用於購買連結）
+        if (journeyRes.ok) {
+          const journeyData = await journeyRes.json()
+          setJourneyId(journeyData.id)
+        }
+      } catch (error) {
+        console.error('載入資料失敗:', error)
+        setCurrentLesson(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [slug, lessonId])
+
+  /**
+   * 處理完成單元
+   * 呼叫新的 Journey API: POST /api/journeys/{slug}/lessons/{lessonId}/complete
+   * 注意：currentLesson.id 是 number 類型，對應後端的 externalId (Integer)
+   */
+  const handleCompleteUnit = async () => {
+    if (!currentLesson || completing) return
+
+    try {
+      setCompleting(true)
+      // 使用新的 Journey API 路徑
+      const res = await fetch(`/api/journeys/${slug}/lessons/${currentLesson.id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (res.ok) {
+        const data: CompleteUnitResponse = await res.json()
+
+        // 顯示 toast 通知
+        toast({
+          title: "單元已完成！",
+          description: `獲得 ${data.unit.xpEarned} XP`,
+        })
+
+        // 更新當前單元狀態
+        setCurrentLesson(prev => prev ? {
+          ...prev,
+          isCompleted: true,
+        } : null)
+
+        // 觸發自定義事件，通知 SiteHeader 和 Sidebar 更新資料
+        window.dispatchEvent(new Event('userXpUpdated'))
+      } else if (res.status === 401) {
+        toast({
+          title: "請先登入",
+          description: "完成單元需要登入帳號",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "完成失敗",
+          description: "無法完成此單元，請稍後再試",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('完成單元失敗:', error)
+      toast({
+        title: "發生錯誤",
+        description: "請稍後再試",
+        variant: "destructive",
+      })
+    } finally {
+      setCompleting(false)
+    }
+  }
+
+
+  /**
+   * 處理播放進度（使用 ref 避免頻繁重新渲染）
+   */
+  const handleProgress = (seconds: number, duration: number) => {
+    // 使用 ref 儲存即時進度（不觸發重新渲染）
+    currentSecondsRef.current = seconds
+    durationSecondsRef.current = duration
+
+    const now = Date.now()
+
+    // 每 2 秒更新一次進度百分比（用於顯示）
+    if (now - lastPercentUpdateRef.current >= 2000) {
+      const percent = duration > 0 ? (seconds / duration) * 100 : 0
+      setProgressPercent(percent)
+      lastPercentUpdateRef.current = now
+    }
+
+    // 每 5 秒保存一次進度
+    if (now - lastSaveTimeRef.current >= 5000) {
+      saveProgress(seconds)
+      lastSaveTimeRef.current = now
+    }
+  }
+
+  /**
+   * 保存觀看進度到後端
+   * 使用新的 Journey API: POST /api/journeys/{slug}/lessons/{lessonId}/progress
+   */
+  const saveProgress = async (position: number) => {
+    if (!currentLesson || !slug) return
+
+    try {
+      await fetch(`/api/journeys/${slug}/lessons/${currentLesson.id}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lastPositionSeconds: Math.floor(position) }),
+      })
+    } catch (error) {
+      console.error('保存進度失敗:', error)
+    }
+  }
+
+  /**
+   * 處理影片結束
+   */
+  const handleVideoEnded = () => {
+    console.log('影片播放結束')
+  }
+
+  /**
+   * 從 YouTube URL 提取 Video ID
+   */
+  const getYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null
+    try {
+      const urlObj = new URL(url)
+
+      // 處理 youtu.be 短網址
+      if (urlObj.hostname === 'youtu.be') {
+        return urlObj.pathname.slice(1)
+      }
+
+      // 處理標準 YouTube URL
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v')
+      }
+
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  // 判斷是否可以存取（使用後端回傳的 canAccess 欄位）
+  // 後端已經處理了：免費課程 → true，付費課程 → 檢查是否已購買
+  const canAccess = currentLesson?.canAccess ?? false
+  const isFreePreview = currentLesson ? !currentLesson.premiumOnly : false
+
+  if (checkingAuth || loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          {checkingAuth ? '驗證登入狀態...' : '載入中...'}
+        </p>
+      </div>
+    )
+  }
+
+  if (!currentLesson) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-2">無法載入課程</h2>
+          <p className="text-muted-foreground mb-6">
+            找不到此課程單元，請確認網址是否正確。
+          </p>
+          <Button asChild size="lg" className="bg-yellow-600 hover:bg-yellow-700 text-black">
+            <a href={`/journeys`}>
+              返回課程列表
+            </a>
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* 課程單元 Sidebar */}
+      <CourseUnitSidebar
+        courseCode={slug}
+        currentUnitId={lessonId}
+      />
+
+      {/* 主內容區（根據 sidebar 狀態調整左邊距）*/}
+      <div
+        className={cn(
+          "flex-1 transition-all duration-300",
+          "ml-0",
+          "md:ml-0",
+          !isCollapsed && "md:ml-[300px]"
+        )}
+      >
+        {/* SiteHeader 已經在 Root Layout 中，高度為 16（64px）*/}
+        <main className="min-h-screen pt-16">
+          {/* 播放器區域（佔滿整個可視區域）*/}
+          <div className="h-[calc(100vh-4rem)] bg-black relative flex flex-col">
+            {canAccess ? (
+              currentLesson.type === 'scroll' ? (
+                // scroll 類型：顯示「內容開發中」
+                <div className="flex items-center justify-center h-full bg-background">
+                  <div className="text-center">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                      {currentLesson.name}
+                    </h1>
+                    <p className="text-muted-foreground text-lg">
+                      內容開發中...
+                    </p>
+                  </div>
+                </div>
+              ) : currentLesson.type === 'google-form' ? (
+                // google-form 類型：顯示「複習題開發中」
+                <div className="flex items-center justify-center h-full bg-background">
+                  <div className="text-center">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                      {currentLesson.name}
+                    </h1>
+                    <p className="text-muted-foreground text-lg">
+                      複習題開發中...
+                    </p>
+                  </div>
+                </div>
+              ) : (
+              <>
+                {/* 折價券提示 Alert（浮在播放器上方） */}
+                {isFreePreview && showCouponAlert && (
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-full max-w-3xl px-4">
+                    <Alert className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                      <AlertDescription className="flex items-center justify-between text-yellow-800 dark:text-yellow-200">
+                        <span>將此體驗課程的全部影片看完就可以獲得 3000 元課程折價券！</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 ml-2 hover:bg-yellow-100 dark:hover:bg-yellow-800"
+                          onClick={() => setShowCouponAlert(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+
+                {/* YouTube 播放器 */}
+                <div className="relative w-full flex-1 bg-black">
+                  {currentLesson.videoUrl && getYouTubeVideoId(currentLesson.videoUrl) ? (
+                    <YoutubePlayer
+                      videoId={getYouTubeVideoId(currentLesson.videoUrl)!}
+                      onProgress={handleProgress}
+                      onEnded={handleVideoEnded}
+                      initialPosition={lastSavedPosition}
+                    />
+                  ) : (
+                    <div className="text-white text-center flex items-center justify-center h-full">
+                      <div>
+                        <p>找不到影片 URL</p>
+                        <p className="text-sm text-gray-400 mt-2">請確認課程單元設定</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 交付按鈕（固定在右下角） */}
+                <div className="absolute bottom-20 right-8 z-20">
+                  <Button
+                    onClick={handleCompleteUnit}
+                    disabled={
+                      completing ||
+                      currentLesson.isCompleted ||
+                      progressPercent < 95
+                    }
+                    size="lg"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-black shadow-lg"
+                    data-testid="complete-unit-button"
+                  >
+                    {currentLesson.isCompleted
+                      ? '已完成'
+                      : completing
+                      ? '處理中...'
+                      : progressPercent < 95
+                      ? `觀看進度 ${Math.floor(progressPercent)}%`
+                      : '交付課程'
+                    }
+                  </Button>
+                </div>
+              </>
+              )
+            ) : (
+              // 無權限：顯示鎖定提示
+              <div className="flex items-center justify-center h-full bg-background">
+                <Card className="p-8 text-center max-w-md">
+                  <Lock className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <h2 className="text-2xl font-bold mb-2">
+                    您無法觀看「{currentLesson.name}」
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    這是購買後才能享有的內容。
+                  </p>
+                  <Button asChild size="lg" className="bg-yellow-600 hover:bg-yellow-700 text-black">
+                    <a href={`/journeys/${slug}/orders?productId=${journeyId || 0}`}>
+                      前往購買課程
+                    </a>
+                  </Button>
+                </Card>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* 登入提示 Dialog */}
+      <AlertDialog open={showLoginDialog} onOpenChange={() => {}}>
+        <AlertDialogContent data-testid="login-prompt-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              完成登入並擁有完整課程體驗，包含觀看進度記錄、完成單元獲得 XP、參與排行榜等功能！
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <Button
+              onClick={() => {
+                const currentPath = window.location.pathname
+                router.push(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold px-8"
+              size="lg"
+              data-testid="goto-login-button"
+            >
+              前往登入
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
