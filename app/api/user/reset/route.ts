@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 步驟 3: 使用 token 向後端 API 重置資料
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     console.log("[/api/user/reset] POST - 向後端發送請求到:", `${apiUrl}/api/user/reset`);
 
     const response = await fetch(

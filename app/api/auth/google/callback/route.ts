@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     // 步驟 3: 將使用者資料傳送到後端進行登入/註冊
     // 後端會建立或更新使用者，並回傳 JWT token
     // 使用 API_URL（容器內部）或 NEXT_PUBLIC_API_URL（本地開發）
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     const loginResponse = await fetch(
       `${apiUrl}/api/auth/oauth-login`,
       {
