@@ -1,6 +1,11 @@
 /**
  * MobileSidebar 組件 - 手機版側邊欄
  * 使用 Sheet 從左側滑出
+ *
+ * 導覽連結說明：
+ * - 「課程」(/courses)：課程列表頁（主要入口，顯示所有課程 card）
+ * - 「所有單元」(/journeys)：目前選取課程的章節＋單元總覽頁（依賴 currentCourse context）
+ *   注意：需要先在 /courses 選擇課程後，此頁面才能正常顯示內容
  */
 "use client";
 
@@ -46,7 +51,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "個人檔案",
-        href: "/profile",
+        href: "/users/me/profile",
         icon: User,
       },
     ],
@@ -65,7 +70,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "挑戰歷程",
-        href: "/journeys",
+        href: "/users/me/portfolio",
         icon: LineChart,
       },
     ],
@@ -74,12 +79,12 @@ const designPatternsNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
         title: "挑戰地圖",
-        href: "/map",
+        href: "/journeys/software-design-pattern/roadmap",
         icon: Map,
       },
       {
@@ -107,7 +112,7 @@ const aiBddNavGroups = [
       },
       {
         title: "個人檔案",
-        href: "/profile",
+        href: "/users/me/profile",
         icon: User,
       },
     ],
@@ -125,7 +130,7 @@ const aiBddNavGroups = [
     items: [
       {
         title: "所有單元",
-        href: "/units",
+        href: "/journeys",
         icon: Grid3x3,
       },
       {
@@ -147,7 +152,8 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
   const [open, setOpen] = React.useState(false);
 
   // 根據當前課程選擇導航項目
-  const navGroups = currentCourse.id === "AI_BDD"
+  // AI x BDD 課程使用 slug "ai-x-bdd"
+  const navGroups = currentCourse?.slug === "ai-x-bdd"
     ? aiBddNavGroups
     : designPatternsNavGroups;
 
@@ -156,7 +162,7 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
       <SheetTrigger asChild>
         {children}
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0 [&>button]:hidden">
+      <SheetContent side="left" className="w-[300px] p-0 [&>button]:hidden">
         {/* 側邊欄內容 */}
         <nav className="flex flex-col h-full">
           {/* Logo */}
@@ -195,9 +201,10 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
                 <div className="py-2">
                   {group.items.map((item) => {
                     const Icon = item.icon;
+                    // 特別處理 /journeys：只在完全匹配時才算 active，避免與子路徑（如 roadmap）衝突
                     const isActive =
                       pathname === item.href ||
-                      (item.href !== "/" && pathname.startsWith(item.href + "/"));
+                      (item.href !== "/" && item.href !== "/journeys" && pathname.startsWith(item.href + "/"));
 
                     return (
                       <Link

@@ -10,7 +10,11 @@ import { devLogin } from '../helpers/auth';
  * 3. Sidebar 連結導航功能
  *
  * 使用 data-testid 格式：sidebar-nav-{路徑}
- * 例如：sidebar-nav- (首頁), sidebar-nav-courses, sidebar-nav-leaderboard, 等
+ * 例如：sidebar-nav- (首頁), sidebar-nav-journeys, sidebar-nav-leaderboard, 等
+ *
+ * 路由說明：
+ * - /courses：課程列表頁（所有課程 card，主要入口）
+ * - /journeys：目前選取課程的章節＋單元總覽頁（依賴 currentCourse context）
  */
 
 test.describe('Sidebar: 導航連結驗證', () => {
@@ -39,21 +43,21 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Then: 應該看到基本連結（首頁、課程、排行榜）
       const homeLink = page.locator('[data-testid="sidebar-nav-"]');
-      const coursesLink = page.locator('[data-testid="sidebar-nav-courses"]');
+      const journeysLink = page.locator('[data-testid="sidebar-nav-journeys"]');
       const leaderboardLink = page.locator('[data-testid="sidebar-nav-leaderboard"]');
 
       console.log('[Then] 驗證基本連結存在');
       await expect(homeLink).toBeVisible({ timeout: 5000 });
       console.log('✅ 首頁連結可見');
 
-      await expect(coursesLink).toBeVisible({ timeout: 5000 });
+      await expect(journeysLink).toBeVisible({ timeout: 5000 });
       console.log('✅ 課程連結可見');
 
       await expect(leaderboardLink).toBeVisible({ timeout: 5000 });
       console.log('✅ 排行榜連結可見');
 
       // And: 應該看不到或隱藏需要登入的連結（個人檔案）
-      const profileLink = page.locator('[data-testid="sidebar-nav-profile"]');
+      const profileLink = page.locator('[data-testid="sidebar-nav-users-me-profile"]');
       const profileVisibility = await profileLink.isVisible().catch(() => false);
 
       if (!profileVisibility) {
@@ -72,7 +76,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
-      await page.waitForSelector('[data-testid="sidebar-nav-courses"]', {
+      await page.waitForSelector('[data-testid="sidebar-nav-journeys"]', {
         timeout: 10000,
         state: 'visible'
       }).catch(() => {
@@ -81,15 +85,15 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // When: 我點擊課程連結
       console.log('[When] 點擊課程連結');
-      const coursesLink = page.locator('[data-testid="sidebar-nav-courses"]');
-      await expect(coursesLink).toBeVisible();
-      await coursesLink.click();
+      const journeysLink = page.locator('[data-testid="sidebar-nav-journeys"]');
+      await expect(journeysLink).toBeVisible();
+      await journeysLink.click();
 
       // Then: 應該導航到課程頁面
       console.log('[Then] 驗證導航到課程頁面');
-      await page.waitForURL('**/courses', { timeout: 10000 });
+      await page.waitForURL('**/journeys', { timeout: 10000 });
       await page.waitForLoadState('load');
-      expect(page.url()).toContain('/courses');
+      expect(page.url()).toContain('/journeys');
       console.log('✅ 成功導航到課程頁面');
 
       console.log('[Test] ✅ 未登入時課程連結導航正常');
@@ -121,8 +125,8 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       const requiredLinks = [
         { testid: 'sidebar-nav-', label: '首頁' },
-        { testid: 'sidebar-nav-courses', label: '課程' },
-        { testid: 'sidebar-nav-profile', label: '個人檔案' },
+        { testid: 'sidebar-nav-journeys', label: '課程' },
+        { testid: 'sidebar-nav-users-me-profile', label: '個人檔案' },
         { testid: 'sidebar-nav-leaderboard', label: '排行榜' },
       ];
 
@@ -159,7 +163,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // When: 我點擊個人檔案連結
       console.log('[When] 點擊個人檔案連結');
-      const profileLink = page.locator('[data-testid="sidebar-nav-profile"]');
+      const profileLink = page.locator('[data-testid="sidebar-nav-users-me-profile"]');
 
       try {
         await expect(profileLink).toBeVisible({ timeout: 5000 });
@@ -237,13 +241,13 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Test Case 2: 在課程頁面時，課程連結應該高亮
       console.log('\n[Test Case 2] 在課程頁面時');
-      const coursesLink = page.locator('[data-testid="sidebar-nav-courses"]');
-      await coursesLink.click();
+      const journeysLink = page.locator('[data-testid="sidebar-nav-journeys"]');
+      await journeysLink.click();
       await page.waitForLoadState('load');
 
-      const coursesLinkClasses = await coursesLink.getAttribute('class');
-      console.log(`課程連結 class: ${coursesLinkClasses}`);
-      expect(coursesLinkClasses).toContain('accent');
+      const journeysLinkClasses = await journeysLink.getAttribute('class');
+      console.log(`課程連結 class: ${journeysLinkClasses}`);
+      expect(journeysLinkClasses).toContain('accent');
 
       console.log('[Test] ✅ Sidebar 連結高亮顯示正常');
     });
@@ -257,8 +261,8 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('[And] 定義要測試的連結');
       const linksToTest = [
         {
-          testid: 'sidebar-nav-courses',
-          expectedUrl: '/courses',
+          testid: 'sidebar-nav-journeys',
+          expectedUrl: '/journeys',
           label: '課程',
         },
         {
@@ -267,8 +271,8 @@ test.describe('Sidebar: 導航連結驗證', () => {
           label: '排行榜',
         },
         {
-          testid: 'sidebar-nav-profile',
-          expectedUrl: '/profile',
+          testid: 'sidebar-nav-users-me-profile',
+          expectedUrl: '/users/me/profile',
           label: '個人檔案',
         },
       ];

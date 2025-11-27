@@ -35,7 +35,7 @@ export function DashboardLayout({ children, isAuthenticated = true }: DashboardL
           // 桌面版：根據 sidebar 狀態調整
           "ml-0",
           "lg:ml-16",
-          !isSidebarCollapsed && "lg:ml-64"
+          !isSidebarCollapsed && "lg:ml-[300px]"
         )}
       >
         {/* 主內容 */}

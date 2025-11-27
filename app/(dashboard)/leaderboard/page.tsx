@@ -402,21 +402,6 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex flex-col">
-      {/* 頁面標題 */}
-      <section className="w-full py-12 md:py-16 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
-            <Trophy className="h-16 w-16 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-              排行榜
-            </h1>
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              與全站學員一同競爭，展現你的學習成果！
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* 排行榜內容 */}
       <section className="w-full py-12 md:py-16">
         <div className="container px-4 md:px-6">
@@ -472,13 +457,6 @@ export default function LeaderboardPage() {
               </Card>
             </TabsContent>
           </Tabs>
-
-          {/* 額外資訊 */}
-          <div className="mt-8 text-center text-sm text-muted-foreground max-w-5xl mx-auto">
-            <p>
-              排行榜每小時更新一次。持續學習、完成單元以提升你的排名！
-            </p>
-          </div>
         </div>
       </section>
     </div>

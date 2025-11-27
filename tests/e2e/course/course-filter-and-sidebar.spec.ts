@@ -2,7 +2,29 @@ import { test, expect, Page } from '@playwright/test';
 import { devLogin } from '../helpers/auth';
 
 /**
- * E2E 測試：課程篩選與 Sidebar 聯動
+ * ============================================================================
+ * DEPRECATED: 舊 Course 架構的 E2E 測試
+ * ============================================================================
+ *
+ * 本測試檔案屬於舊的 Course/Unit 架構，已被 Journey 架構取代。
+ *
+ * 測試內容：
+ * - 使用舊的 /courses 路徑
+ * - 使用舊的 /courses/{courseCode} 詳情頁
+ * - 使用舊的 unit sidebar 結構
+ *
+ * 已被取代：
+ * - 新架構使用 /journeys 路徑
+ * - 新架構使用 /journeys/{slug} 詳情頁
+ * - 新架構使用 chapters/missions 結構
+ *
+ * 狀態：已停用（describe.skip）
+ * 原因：完全基於舊架構，不再維護
+ * 如需重寫：請參考新的 Journey 測試架構，建立新的測試檔案
+ *
+ * ============================================================================
+ *
+ * E2E 測試：課程篩選與 Sidebar 聯動（已棄用）
  *
  * 測試範圍：
  * 1. 點擊不同課程卡片後 sidebar 的狀態變化
@@ -27,7 +49,7 @@ async function gotoCoursesAndWaitForCards(page: Page) {
   });
 }
 
-test.describe('Course: 課程篩選與 Sidebar 聯動', () => {
+test.describe.skip('Course: 課程篩選與 Sidebar 聯動 [DEPRECATED - 已停用]', () => {
   test.beforeEach(async ({ context }) => {
     console.log('[Setup] 清除 cookies 重置登入狀態');
     await context.clearCookies();

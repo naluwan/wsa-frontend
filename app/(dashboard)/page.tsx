@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useCourse, AVAILABLE_COURSES } from "@/contexts/course-context"
+import { useCourse } from "@/contexts/course-context"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -29,15 +29,15 @@ import {
 } from "@/components/ui/alert-dialog"
 import { X } from "lucide-react"
 
-// 課程資料型別
+// 課程資料型別（對應 JourneyListItemDto）
 interface Course {
-  id: string
-  code: string
-  title: string
-  description: string
-  teacherName: string
-  priceTwd: number
+  id: number
+  name: string
+  slug: string
+  description?: string
   thumbnailUrl?: string
+  teacherName?: string
+  priceTwd?: number
   isOwned?: boolean
   hasFreePreview?: boolean
 }
@@ -67,7 +67,7 @@ const infoCards: InfoCard[] = [
     buttons: [
       {
         text: "查看課程",
-        link: "/units",
+        link: "/journeys/software-design-pattern/chapters/8/missions/8001",
         variant: "default",
       },
     ],
@@ -127,36 +127,49 @@ export default function HomePage() {
   const { currentCourse, setCurrentCourse } = useCourse()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
-  const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, string>>({})
+  const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, { chapterId: number; lessonId: number }>>({})
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [loginReturnUrl, setLoginReturnUrl] = useState<string>("")
 
-  // 從 API 獲取課程資料
+  // 從 API 獲取課程資料（使用 Journey API）
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const res = await fetch('/api/courses')
+        const res = await fetch('/api/journeys')
         if (res.ok) {
           const data = await res.json()
-          setCourses(data)
+          // 轉換 JourneyListItemDto 為 Course 格式
+          const mappedCourses: Course[] = data.map((j: any) => ({
+            id: j.id,
+            name: j.name,
+            slug: j.slug,
+            description: j.description || '',
+            thumbnailUrl: j.thumbnailUrl,
+            teacherName: j.teacherName || '水球潘',
+            priceTwd: j.priceTwd || 0,
+            isOwned: j.isOwned ?? false, // 使用後端回傳的購買狀態
+            hasFreePreview: true, // 假設所有課程都有免費試看
+          }))
+          setCourses(mappedCourses)
 
-          // 為每個有免費試看的課程獲取第一個免費單元
-          data.forEach(async (course: Course) => {
-            if (course.hasFreePreview) {
-              const detailRes = await fetch(`/api/courses/${course.code}`)
-              if (detailRes.ok) {
-                const detail = await detailRes.json()
-                // 找到第一個免費試看單元
-                for (const section of detail.sections) {
-                  const freeUnit = section.units.find((u: any) => u.isFreePreview)
-                  if (freeUnit) {
-                    setFirstFreeUnits(prev => ({
-                      ...prev,
-                      [course.code]: freeUnit.unitId
-                    }))
-                    break
-                  }
+          // 為每個課程獲取第一個免費 lesson（包含 chapterId）
+          mappedCourses.forEach(async (course: Course) => {
+            const chaptersRes = await fetch(`/api/journeys/${course.slug}/chapters`)
+            if (chaptersRes.ok) {
+              const chapters = await chaptersRes.json()
+              // 找到第一個非 premium 的 lesson
+              for (const chapter of chapters) {
+                const freeLesson = chapter.lessons?.find((l: any) => !l.premiumOnly)
+                if (freeLesson) {
+                  setFirstFreeUnits(prev => ({
+                    ...prev,
+                    [course.slug]: {
+                      chapterId: chapter.id,
+                      lessonId: freeLesson.id
+                    }
+                  }))
+                  break
                 }
               }
             }
@@ -192,66 +205,135 @@ export default function HomePage() {
   }, [])
 
   // 判斷是否顯示提示條（只有軟體設計模式精通之旅才顯示）
-  const showPromoAlert = currentCourse.id === "DESIGN_PATTERNS"
+  const showPromoAlert = currentCourse?.slug === "software-design-pattern"
 
   /**
    * 處理課程 card 點擊事件
    * 功能: 更新全域課程選擇狀態,同時更新上方篩選器和首頁選擇狀態
    */
-  const handleCourseCardClick = (courseCode: string) => {
-    // 根據 courseCode 找到對應的 Course 物件
-    const targetCourse = AVAILABLE_COURSES.find(c => c.code === courseCode)
-    if (targetCourse) {
-      setCurrentCourse(targetCourse)
-      console.log('[HomePage] 切換課程:', targetCourse.name)
-    }
+  const handleCourseCardClick = (course: Course) => {
+    // 轉換為 context 的 Course 格式
+    setCurrentCourse({
+      id: course.id,
+      name: course.name,
+      slug: course.slug,
+    })
+    console.log('[HomePage] 切換課程:', course.name)
   }
 
-  // 課程顯示設定（根據課程代碼）
-  const getCourseDisplayConfig = (courseCode: string) => {
-    switch (courseCode) {
-      case 'SOFTWARE_DESIGN_PATTERN':
+  // 課程顯示設定（根據課程 slug）
+  const getCourseDisplayConfig = (slug: string, isOwned: boolean = false) => {
+    switch (slug) {
+      case 'software-design-pattern':
         return {
           image: '/images/course_0.png',
-          showPromo: true,
+          showPromo: !isOwned, // 已擁有時不顯示促銷
           promoText: '看完課程介紹，立刻折價 3,000 元',
-          buttonText: '立即體驗',
+          buttonText: isOwned ? '進入課程' : '立即體驗',
+          description: '用一趟旅程的時間，成為硬核的 Coding 實戰高手',
+          firstChapterId: 8,
+          firstLessonId: 8001,
         }
-      case 'AI_X_BDD':
+      case 'ai-bdd':
         return {
           image: '/images/course_1.png',
           showPromo: false,
           promoText: '',
-          buttonText: '立刻購買',
+          buttonText: isOwned ? '進入課程' : '立刻購買',
+          description: 'AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發',
+          firstChapterId: 4000,
+          firstLessonId: 40001,
+        }
+      // 舊的 slug 相容（以防萬一）
+      case 'ai-x-bdd':
+        return {
+          image: '/images/course_1.png',
+          showPromo: false,
+          promoText: '',
+          buttonText: isOwned ? '進入課程' : '立刻購買',
+          description: 'AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發',
+          firstChapterId: 4000,
+          firstLessonId: 40001,
         }
       default:
         return {
           image: '/images/course_0.png',
           showPromo: false,
           promoText: '',
-          buttonText: '立即體驗',
+          buttonText: isOwned ? '進入課程' : '立即體驗',
+          description: '',
+          firstChapterId: 0,
+          firstLessonId: 0,
         }
     }
   }
 
+  // 軟體設計模式精通之旅的固定試聽課程連結
+  const SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL = '/journeys/software-design-pattern/chapters/8/missions/8001'
+
   /**
-   * 處理課程按鈕點擊（試聽課程或購買課程）
-   * 如果未登入，顯示登入對話框
-   * 如果已登入，導向對應頁面
+   * 處理「進入課程」按鈕點擊
+   * 先呼叫 last-watched API，有資料就跳轉到最後觀看的位置，沒有就跳轉到第一個單元
+   */
+  const handleEnterCourseClick = async (course: Course, displayConfig: any) => {
+    try {
+      // 呼叫 last-watched API
+      const res = await fetch(`/api/journeys/${course.slug}/last-watched`)
+
+      if (res.ok) {
+        const data = await res.json()
+
+        // 如果有最後觀看記錄，跳轉到該位置
+        if (data && data.chapterId && data.lessonId) {
+          console.log('[HomePage] 跳轉到最後觀看位置:', data)
+          router.push(`/journeys/${course.slug}/chapters/${data.chapterId}/missions/${data.lessonId}`)
+          return
+        }
+      }
+
+      // 沒有最後觀看記錄或 API 失敗，跳轉到第一個單元
+      console.log('[HomePage] 無最後觀看記錄，跳轉到第一個單元')
+      router.push(`/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+    } catch (error) {
+      console.error('[HomePage] 取得最後觀看位置失敗:', error)
+      // 發生錯誤時，跳轉到第一個單元
+      router.push(`/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+    }
+  }
+
+  /**
+   * 處理課程按鈕點擊（進入課程、試聽課程或購買課程）
+   * - 如果是「進入課程」（已擁有），呼叫 last-watched API 後跳轉
+   * - 如果是「立刻購買」，直接導向訂單頁面（未登入也可以）
+   * - 如果是「立即體驗」，檢查登入狀態後導向試看頁面
    */
   const handleCourseButtonClick = (course: Course, displayConfig: any) => {
     console.log('[HomePage] 點擊課程按鈕:', {
-      courseCode: course.code,
+      courseSlug: course.slug,
       buttonText: displayConfig.buttonText,
       isLoggedIn,
-      hasFreePreview: course.hasFreePreview,
+      isOwned: course.isOwned,
     })
 
-    // 決定目標 URL
-    const targetUrl =
-      course.hasFreePreview && displayConfig.buttonText === '立即體驗' && firstFreeUnits[course.code]
-        ? `/journeys/${course.code}/missions/${firstFreeUnits[course.code]}`
-        : `/courses/${course.code}`
+    // 如果是「進入課程」（已擁有），呼叫 last-watched API 後跳轉
+    if (displayConfig.buttonText === '進入課程') {
+      handleEnterCourseClick(course, displayConfig)
+      return
+    }
+
+    // 如果是「立刻購買」，直接導向訂單頁面（未登入也可以訪問）
+    if (displayConfig.buttonText === '立刻購買') {
+      const targetUrl = `/journeys/${course.slug}/orders?productId=${course.id}`
+      console.log('[HomePage] 導向訂單頁面:', targetUrl)
+      router.push(targetUrl)
+      return
+    }
+
+    // 其他情況（立即體驗）：決定目標 URL
+    // 軟體設計模式精通之旅使用固定的試聽課程連結
+    const targetUrl = course.slug === 'software-design-pattern'
+      ? SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL
+      : `/journeys/${course.slug}`
 
     console.log('[HomePage] 目標 URL:', targetUrl)
 
@@ -284,16 +366,19 @@ export default function HomePage() {
           {/* 提示條（僅軟體設計模式精通之旅顯示）*/}
           {showPromoAlert && (
             <Alert className="flex items-center justify-between gap-4 mb-6 bg-primary/5 border-primary/20">
-              <AlertDescription className="flex-1 mb-0 text-foreground">
+              <Link
+                href="/journeys/software-design-pattern/chapters/8/missions/8001"
+                className="flex-1 mb-0 text-foreground underline cursor-pointer"
+              >
                 將軟體設計精通之旅體驗課程的全部影片看完就可以獲得 3000 元課程折價券！
-              </AlertDescription>
+              </Link>
               <Button
                 asChild
                 size="sm"
                 variant="outline"
                 className="border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white flex-shrink-0"
               >
-                <Link href="/courses/software-design-pattern" className="inline-flex items-center justify-center w-full h-full">
+                <Link href="/journeys/software-design-pattern/chapters/8/missions/8001" className="inline-flex items-center justify-center w-full h-full">
                   前往
                 </Link>
               </Button>
@@ -320,13 +405,13 @@ export default function HomePage() {
               ) : (
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   {courses.map((course) => {
-                    const displayConfig = getCourseDisplayConfig(course.code)
-                    const isSelected = currentCourse.code === course.code
+                    const displayConfig = getCourseDisplayConfig(course.slug, course.isOwned)
+                    const isSelected = currentCourse?.slug === course.slug
 
                     return (
                       <Card
                         key={course.id}
-                        onClick={() => handleCourseCardClick(course.code)}
+                        onClick={() => handleCourseCardClick(course)}
                         className={`flex flex-col overflow-hidden transition-all duration-300 cursor-pointer hover:scale-105 bg-card ${
                           isSelected
                             ? 'border-2 border-yellow-600 shadow-lg'
@@ -337,7 +422,7 @@ export default function HomePage() {
                         <div className="relative w-full h-48">
                           <Image
                             src={course.thumbnailUrl ? `/${course.thumbnailUrl}` : displayConfig.image}
-                            alt={course.title}
+                            alt={course.name}
                             fill
                             className="object-cover"
                             priority
@@ -345,14 +430,14 @@ export default function HomePage() {
                         </div>
 
                         <CardHeader>
-                          <CardTitle className="text-xl">{course.title}</CardTitle>
+                          <CardTitle className="text-xl">{course.name}</CardTitle>
                           <CardDescription className="text-lg font-semibold text-yellow-600 dark:text-yellow-500">
-                            {course.teacherName}
+                            {course.teacherName || '水球潘'}
                           </CardDescription>
                         </CardHeader>
 
                         <CardContent>
-                          <p className="text-sm text-muted-foreground">{course.description}</p>
+                          <p className="text-sm text-muted-foreground">{displayConfig.description || course.description}</p>
                         </CardContent>
 
                         <CardFooter className="mt-auto flex flex-col gap-2">
