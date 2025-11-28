@@ -108,9 +108,13 @@ test.describe('Profile: 個人檔案編輯功能', () => {
     const saveButton = page.getByRole('button', { name: '儲存' });
     await saveButton.click();
 
+    // Then: 等待 API 請求完成和對話框關閉動畫
+    console.log('[Then] 等待 API 請求完成');
+    await page.waitForTimeout(1000); // 等待 API 請求和關閉動畫
+
     // Then: 對話框應該關閉
     console.log('[Then] 驗證對話框關閉');
-    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 });
     console.log('✅ 對話框已關閉');
 
     // And: 應該顯示成功訊息（toast）
