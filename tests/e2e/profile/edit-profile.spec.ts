@@ -24,7 +24,7 @@ test.describe('Profile: 個人檔案編輯功能', () => {
 
     // And: 我在個人檔案頁面
     console.log('[And] 前往個人檔案頁面');
-    await page.goto('http://localhost:3000/users/me/profile');
+    await page.goto('/users/me/profile');
     await page.waitForLoadState('load');
 
     // When: 我點擊「編輯資料」按鈕
@@ -50,7 +50,7 @@ test.describe('Profile: 個人檔案編輯功能', () => {
     // Given: 我已登入且開啟編輯對話框
     console.log('[Given] 已登入且開啟編輯對話框');
     await devLogin(page, 'seed_test_001');
-    await page.goto('http://localhost:3000/users/me/profile');
+    await page.goto('/users/me/profile');
     await page.waitForLoadState('load');
 
     const editButton = page.getByRole('button', { name: '編輯資料' });
@@ -91,7 +91,7 @@ test.describe('Profile: 個人檔案編輯功能', () => {
     // Given: 我已登入且開啟編輯對話框
     console.log('[Given] 已登入且開啟編輯對話框');
     await devLogin(page, 'seed_test_001');
-    await page.goto('http://localhost:3000/users/me/profile');
+    await page.goto('/users/me/profile');
     await page.waitForLoadState('load');
 
     const editButton = page.getByRole('button', { name: '編輯資料' });

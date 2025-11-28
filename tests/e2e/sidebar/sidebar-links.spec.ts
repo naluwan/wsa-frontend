@@ -27,7 +27,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
     test('未登入時應該只顯示基本連結，隱藏需要登入的連結', async ({ page }) => {
       // Given: 我在未登入狀態下訪問首頁
       console.log('[Given] 未登入狀態下訪問首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -72,7 +72,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
     test('未登入時點擊課程連結應能導航成功', async ({ page }) => {
       // Given: 我在未登入狀態下
       console.log('[Given] 未登入狀態下');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -109,7 +109,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // When: 我訪問首頁
       console.log('[When] 訪問首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -150,7 +150,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // And: 我在首頁
       console.log('[And] 在首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -190,7 +190,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // And: 我在首頁
       console.log('[And] 在首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -224,7 +224,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // Test Case 1: 在首頁時，首頁連結應該高亮
       console.log('\n[Test Case 1] 在首頁時');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 導航元素載入
@@ -305,7 +305,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // And: 我在首頁
       console.log('[And] 在首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // When: 我查看 sidebar 中的寶典連結（預設應該是軟體設計模式的 SOP 寶典）
@@ -369,7 +369,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // And: 我在首頁
       console.log('[And] 在首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // When: 我切換到 AI x BDD 課程
@@ -430,7 +430,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       // And: 我訪問首頁
       console.log('[And] 訪問首頁');
-      await page.goto('http://localhost:3000');
+      await page.goto('/');
       await page.waitForLoadState('load');
 
       // And: 等待 sidebar 元素載入
