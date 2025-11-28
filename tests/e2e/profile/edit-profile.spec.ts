@@ -106,11 +106,27 @@ test.describe('Profile: 個人檔案編輯功能', () => {
     // And: 點擊儲存按鈕
     console.log('[And] 點擊儲存按鈕');
     const saveButton = page.getByRole('button', { name: '儲存' });
+
+    // 等待 API 請求完成
+    const responsePromise = page.waitForResponse(
+      response => response.url().includes('/api/user/me/profile') && response.request().method() === 'PATCH',
+      { timeout: 15000 }
+    );
+
     await saveButton.click();
 
-    // Then: 等待 API 請求完成和對話框關閉動畫
+    // Then: 等待 API 請求完成
     console.log('[Then] 等待 API 請求完成');
-    await page.waitForTimeout(1000); // 等待 API 請求和關閉動畫
+    try {
+      const response = await responsePromise;
+      console.log(`✅ API 請求完成，狀態碼: ${response.status()}`);
+    } catch (error) {
+      console.error('❌ API 請求超時或失敗:', error);
+      throw error;
+    }
+
+    // 等待對話框關閉動畫（200ms）
+    await page.waitForTimeout(500);
 
     // Then: 對話框應該關閉
     console.log('[Then] 驗證對話框關閉');
