@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     console.log("[/api/leaderboard/weekly/v2] 查詢參數 - limit:", limit, "offset:", offset);
 
     // 步驟 2: 向後端 API 請求本週排行榜（有 token 則帶上，沒有也可以查看）
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     const backendUrl = `${apiUrl}/api/leaderboard/weekly/v2?limit=${limit}&offset=${offset}`;
     console.log("[/api/leaderboard/weekly/v2] 向後端發送請求到:", backendUrl);
 

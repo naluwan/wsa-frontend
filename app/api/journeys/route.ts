@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
 export async function GET() {
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+  const backendUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
   try {
     // 取得 JWT token（如果存在）

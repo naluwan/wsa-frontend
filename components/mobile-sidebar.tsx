@@ -89,7 +89,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "SOP 寶典",
-        href: "/sop",
+        href: "/journeys/software-design-pattern/sop",
         icon: FileText,
       },
     ],
@@ -135,7 +135,7 @@ const aiBddNavGroups = [
       },
       {
         title: "Prompt 寶典",
-        href: "/sop",
+        href: "/journeys/ai-bdd/sop",
         icon: Sparkles,
       },
     ],
@@ -152,8 +152,8 @@ export function MobileSidebar({ children }: MobileSidebarProps) {
   const [open, setOpen] = React.useState(false);
 
   // 根據當前課程選擇導航項目
-  // AI x BDD 課程使用 slug "ai-x-bdd"
-  const navGroups = currentCourse?.slug === "ai-x-bdd"
+  // AI x BDD 課程使用 slug "ai-bdd"
+  const navGroups = currentCourse?.slug === "ai-bdd"
     ? aiBddNavGroups
     : designPatternsNavGroups;
 

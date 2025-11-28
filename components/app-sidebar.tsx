@@ -87,7 +87,7 @@ const designPatternsNavGroups = [
       },
       {
         title: "SOP 寶典",
-        href: "/sop",
+        href: "/journeys/software-design-pattern/sop",
         icon: FileText,
       },
     ],
@@ -132,9 +132,9 @@ const aiBddNavGroups = [
         icon: Grid3x3,
       },
       {
-        title: "SOP 寶典",
-        href: "/sop",
-        icon: FileText,
+        title: "Prompt 寶典",
+        href: "/journeys/ai-bdd/sop",
+        icon: Sparkles,
       },
     ],
   },
@@ -179,7 +179,7 @@ const unauthenticatedDesignPatternsNavGroups = [
       },
       {
         title: "SOP 寶典",
-        href: "/sop",
+        href: "/journeys/software-design-pattern/sop",
         icon: FileText,
       },
     ],
@@ -219,9 +219,9 @@ const unauthenticatedAiBddNavGroups = [
         icon: Grid3x3,
       },
       {
-        title: "SOP 寶典",
-        href: "/sop",
-        icon: FileText,
+        title: "Prompt 寶典",
+        href: "/journeys/ai-bdd/sop",
+        icon: Sparkles,
       },
     ],
   },

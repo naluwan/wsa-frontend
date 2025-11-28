@@ -52,7 +52,7 @@ export async function POST(
     }
 
     // 步驟 3: 使用 token 向後端 API 發送完成課程請求
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     const backendUrl = `${apiUrl}/api/journeys/${slug}/lessons/${lessonId}/complete`;
     console.log("[/api/journeys/[slug]/lessons/[lessonId]/complete] POST - 向後端發送請求到:", backendUrl);
 

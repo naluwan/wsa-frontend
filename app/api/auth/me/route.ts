@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     // 環境變數說明：
     // - API_URL: 容器內部使用（docker-compose 中的 backend:8080）
     // - NEXT_PUBLIC_API_URL: 本地開發使用（localhost:8080）
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     console.log("[/api/auth/me] 使用 API URL:", apiUrl);
     console.log("[/api/auth/me] 向後端發送請求到:", `${apiUrl}/api/user/me`);
 

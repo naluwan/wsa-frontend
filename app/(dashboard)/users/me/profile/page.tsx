@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { EditProfileDialog } from "@/components/edit-profile-dialog"
 import { cn } from "@/lib/utils"
 
 /**
@@ -41,6 +42,12 @@ interface UserData {
   level: number
   totalXp: number
   weeklyXp: number
+  nickname?: string | null
+  gender?: string | null
+  occupation?: string | null
+  birthday?: string | null
+  location?: string | null
+  githubUrl?: string | null
 }
 
 /**
@@ -82,28 +89,29 @@ export default function ProfilePage() {
   const [showPendingOrderDialog, setShowPendingOrderDialog] = useState(false)
   const [pendingOrder, setPendingOrder] = useState<Order | null>(null)
 
-  // 載入使用者資料
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-        })
+  // 載入使用者資料函數
+  const fetchUser = async () => {
+    try {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      })
 
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
-        } else {
-          setUser(null)
-        }
-      } catch (error) {
-        console.error("[ProfilePage] 取得使用者資料失敗:", error)
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      } else {
         setUser(null)
-      } finally {
-        setIsLoading(false)
       }
+    } catch (error) {
+      console.error("[ProfilePage] 取得使用者資料失敗:", error)
+      setUser(null)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  // 初始載入使用者資料
+  useEffect(() => {
     fetchUser()
   }, [])
 
@@ -226,20 +234,22 @@ export default function ProfilePage() {
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-yellow-500 text-xl">基本資料</CardTitle>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Pencil className="h-4 w-4" />
-                編輯資料
-              </Button>
+              <EditProfileDialog user={user} onProfileUpdated={fetchUser}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Pencil className="h-4 w-4" />
+                  編輯資料
+                </Button>
+              </EditProfileDialog>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">暱稱</p>
-                  <p className="font-medium">{user.displayName || "尚未設定"}</p>
+                  <p className="font-medium">{user.nickname || user.displayName || "尚未設定"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">職業</p>
-                  <p className="font-medium">尚未設定</p>
+                  <p className="font-medium">{user.occupation || "尚未設定"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">等級</p>
@@ -255,19 +265,19 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">生日</p>
-                  <p className="font-medium">尚未設定</p>
+                  <p className="font-medium">{user.birthday || "尚未設定"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">性別</p>
-                  <p className="font-medium">尚未設定</p>
+                  <p className="font-medium">{user.gender || "尚未設定"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">地區</p>
-                  <p className="font-medium">尚未設定</p>
+                  <p className="font-medium">{user.location || "尚未設定"}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm text-muted-foreground mb-1">Github 連結</p>
-                  <p className="font-medium">...</p>
+                  <p className="font-medium">{user.githubUrl || "尚未設定"}</p>
                 </div>
               </div>
             </CardContent>

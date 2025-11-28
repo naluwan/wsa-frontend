@@ -302,8 +302,8 @@ export function SiteHeader() {
     <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="relative flex h-full items-center px-6">
         {/* 課程學習頁面的漢堡排（桌面版在 sidebar 旁邊，手機版固定在左側）*/}
-        {/* 注意：挑戰地圖頁面不顯示漢堡排 */}
-        {isJourneyPage && !pathname.includes('/roadmap') && (
+        {/* 注意：挑戰地圖頁面和 SOP 寶典頁面不顯示漢堡排 */}
+        {isJourneyPage && !pathname.includes('/roadmap') && !pathname.includes('/sop') && (
           <button
             onClick={toggleSidebar}
             className={cn(
@@ -367,10 +367,9 @@ export function SiteHeader() {
             <Button
               asChild
               variant="outline"
-              size="sm"
-              className={shouldShowChallengeButton ? '' : 'invisible pointer-events-none'}
+              className={shouldShowChallengeButton ? 'h-10' : 'invisible pointer-events-none'}
             >
-              <Link href="/journeys/software-design-pattern/roadmap" className="inline-flex items-center justify-center gap-2 w-full h-full">
+              <Link href="/journeys/software-design-pattern/roadmap" className="inline-flex items-center justify-center gap-2 w-full h-full px-4">
                 <Map className="h-4 w-4" />
                 <span className="hidden sm:inline">前往挑戰</span>
               </Link>

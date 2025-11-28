@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 呼叫後端 API（後端路徑是 /api/orders/user）
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
     const res = await fetch(`${apiUrl}/api/orders/user`, {
       cache: "no-store",
       headers: {

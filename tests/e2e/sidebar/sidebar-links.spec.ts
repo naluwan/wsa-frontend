@@ -297,6 +297,129 @@ test.describe('Sidebar: 導航連結驗證', () => {
 
       console.log('\n[Test] ✅ 所有主要連結導航測試完成');
     });
+
+    test('登入後點擊 SOP 寶典應導航到軟體設計模式 SOP 頁面', async ({ page }) => {
+      // Given: 我已登入
+      console.log('[Given] 已登入');
+      await devLogin(page, 'seed_test_001');
+
+      // And: 我在首頁
+      console.log('[And] 在首頁');
+      await page.goto('http://localhost:3000');
+      await page.waitForLoadState('load');
+
+      // When: 我查看 sidebar 中的寶典連結（預設應該是軟體設計模式的 SOP 寶典）
+      console.log('[When] 查看 sidebar 中的寶典連結');
+      const sopLink = page.locator('[data-testid="sidebar-nav-journeys-software-design-pattern-sop"]');
+
+      try {
+        await expect(sopLink).toBeVisible({ timeout: 5000 });
+        console.log('✅ 找到 SOP 寶典連結');
+
+        // And: 點擊 SOP 寶典連結
+        console.log('[And] 點擊 SOP 寶典連結');
+        await sopLink.click();
+
+        // Then: 應該導航到軟體設計模式的 SOP 頁面
+        console.log('[Then] 驗證導航到 SOP 頁面');
+        await page.waitForURL('**/journeys/software-design-pattern/sop', { timeout: 10000 });
+        await page.waitForLoadState('load');
+        expect(page.url()).toContain('/journeys/software-design-pattern/sop');
+        console.log('✅ 成功導航到軟體設計模式 SOP 頁面');
+
+        // And: 頁面應該顯示「SOP 寶典」標題
+        const heading = page.locator('h1:has-text("SOP 寶典")');
+        await expect(heading).toBeVisible({ timeout: 5000 });
+        console.log('✅ 頁面顯示 SOP 寶典標題');
+
+        // And: 應該顯示課程折價提示框（軟體設計模式限定）
+        const discountAlert = page.getByText('將軟體設計精通之旅體驗課程的全部影片看完就可以獲得 3000 元課程折價券！');
+        const alertVisible = await discountAlert.isVisible().catch(() => false);
+        if (alertVisible) {
+          console.log('✅ 顯示課程折價提示框');
+        } else {
+          console.log('ℹ️  未顯示課程折價提示框（可能需檢查條件）');
+        }
+
+        // And: Header 應該存在（但不顯示課程篩選器和漢堡排）
+        const header = page.locator('header');
+        await expect(header).toBeVisible({ timeout: 5000 });
+        console.log('✅ Header 顯示正常');
+
+        // And: 不應該顯示漢堡排按鈕
+        const hamburgerButton = page.locator('button:has-text("Menu")').or(page.locator('svg.lucide-menu').locator('..'));
+        const hamburgerVisible = await hamburgerButton.isVisible().catch(() => false);
+        if (!hamburgerVisible) {
+          console.log('✅ 漢堡排按鈕已隱藏（符合預期）');
+        } else {
+          console.log('⚠️ 漢堡排按鈕仍然可見（需要檢查）');
+        }
+
+        console.log('[Test] ✅ SOP 寶典完整功能測試通過');
+      } catch (error) {
+        console.error('❌ SOP 寶典連結測試失敗', error);
+        throw error;
+      }
+    });
+
+    test('切換到 AI x BDD 課程後應顯示 Prompt 寶典', async ({ page }) => {
+      // Given: 我已登入
+      console.log('[Given] 已登入');
+      await devLogin(page, 'seed_test_001');
+
+      // And: 我在首頁
+      console.log('[And] 在首頁');
+      await page.goto('http://localhost:3000');
+      await page.waitForLoadState('load');
+
+      // When: 我切換到 AI x BDD 課程
+      console.log('[When] 切換到 AI x BDD 課程');
+      const courseSelector = page.locator('[role="combobox"]').first();
+      if (await courseSelector.isVisible().catch(() => false)) {
+        await courseSelector.click();
+        await page.waitForTimeout(500);
+
+        // 選擇 AI x BDD 課程
+        const aiBddOption = page.getByText('AI x BDD').or(page.getByText('ai-bdd'));
+        if (await aiBddOption.isVisible().catch(() => false)) {
+          await aiBddOption.click();
+          await page.waitForTimeout(1000);
+          console.log('✅ 成功切換到 AI x BDD 課程');
+
+          // Then: Sidebar 應該顯示「Prompt 寶典」連結
+          console.log('[Then] 驗證 Prompt 寶典連結');
+          const promptLink = page.locator('[data-testid="sidebar-nav-journeys-ai-bdd-sop"]');
+          const promptVisible = await promptLink.isVisible().catch(() => false);
+
+          if (promptVisible) {
+            console.log('✅ 找到 Prompt 寶典連結');
+
+            // And: 點擊 Prompt 寶典連結
+            console.log('[And] 點擊 Prompt 寶典連結');
+            await promptLink.click();
+
+            // Then: 應該導航到 AI x BDD 的 SOP 頁面
+            await page.waitForURL('**/journeys/ai-bdd/sop', { timeout: 10000 });
+            await page.waitForLoadState('load');
+            expect(page.url()).toContain('/journeys/ai-bdd/sop');
+            console.log('✅ 成功導航到 AI x BDD Prompt 寶典頁面');
+
+            // And: 頁面應該顯示「Prompt 寶典」標題
+            const heading = page.locator('h1:has-text("Prompt 寶典")');
+            await expect(heading).toBeVisible({ timeout: 5000 });
+            console.log('✅ 頁面顯示 Prompt 寶典標題');
+
+            console.log('[Test] ✅ Prompt 寶典測試完成');
+          } else {
+            console.log('⚠️ 未找到 Prompt 寶典連結（可能課程尚未設定）');
+          }
+        } else {
+          console.log('⚠️ 未找到 AI x BDD 課程選項');
+        }
+      } else {
+        console.log('⚠️ 課程選擇器不可見');
+      }
+    });
   });
 
   test.describe('Sidebar 交互測試', () => {

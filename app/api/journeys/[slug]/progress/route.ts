@@ -12,7 +12,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+  const backendUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
   const { slug } = await params
 
   try {

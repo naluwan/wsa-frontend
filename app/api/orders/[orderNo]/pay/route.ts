@@ -26,7 +26,7 @@ export async function POST(
     }
 
     // 呼叫後端 API
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
     const res = await fetch(`${apiUrl}/api/orders/${orderNo}/pay`, {
       method: "POST",
       headers: {

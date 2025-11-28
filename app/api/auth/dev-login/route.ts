@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     // 步驟 2: 呼叫後端 dev 登入 API
     // 使用 API_URL（容器內部）或 NEXT_PUBLIC_API_URL（本地開發）
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     const loginResponse = await fetch(`${apiUrl}/api/auth/dev-login`, {
       method: 'POST',
       headers: {

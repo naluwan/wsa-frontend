@@ -6,19 +6,33 @@
  * 3. 兩個主要課程卡片（從 API 獲取真實資料）
  * 4. 四張資訊卡片
  */
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { ArrowRight, Trophy, Sword, TrendingUp, BookOpen, Check } from "lucide-react"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  Trophy,
+  Sword,
+  TrendingUp,
+  BookOpen,
+  Check,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useCourse } from "@/contexts/course-context"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useCourse } from "@/contexts/course-context";
+import { CourseDiscountAlert } from "@/components/course-discount-alert";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -26,20 +40,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { X } from "lucide-react"
+} from "@/components/ui/alert-dialog";
+import { X } from "lucide-react";
 
 // 課程資料型別（對應 JourneyListItemDto）
 interface Course {
-  id: number
-  name: string
-  slug: string
-  description?: string
-  thumbnailUrl?: string
-  teacherName?: string
-  priceTwd?: number
-  isOwned?: boolean
-  hasFreePreview?: boolean
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  thumbnailUrl?: string;
+  teacherName?: string;
+  priceTwd?: number;
+  isOwned?: boolean;
+  hasFreePreview?: boolean;
 }
 
 // 假資料：資訊卡片
@@ -62,7 +76,8 @@ const infoCards: InfoCard[] = [
   {
     id: 1,
     title: "軟體設計模式之旅課程",
-    description: "「用一趟旅程的時間，成為硬核的 Coding 高手」 — 精通一套高效率的 OOAD 思路。",
+    description:
+      "「用一趟旅程的時間，成為硬核的 Coding 高手」 — 精通一套高效率的 OOAD 思路。",
     icon: BookOpen,
     buttons: [
       {
@@ -75,7 +90,8 @@ const infoCards: InfoCard[] = [
   {
     id: 2,
     title: "水球潘的部落格",
-    description: "觀看水球撰寫的軟體工程師職涯、軟體設計模式及架構學問，以及領域驅動設計等公開文章。",
+    description:
+      "觀看水球撰寫的軟體工程師職涯、軟體設計模式及架構學問，以及領域驅動設計等公開文章。",
     icon: BookOpen,
     buttons: [
       {
@@ -89,7 +105,8 @@ const infoCards: InfoCard[] = [
   {
     id: 3,
     title: "直接與老師或是其他工程師交流",
-    description: "加入水球成立的工程師 Discord 社群，與水球以及其他工程師線上交流，培養學習習慣及樂趣。",
+    description:
+      "加入水球成立的工程師 Discord 社群，與水球以及其他工程師線上交流，培養學習習慣及樂趣。",
     icon: TrendingUp,
     buttons: [
       {
@@ -109,7 +126,8 @@ const infoCards: InfoCard[] = [
   {
     id: 4,
     title: "技能評級及證書系統",
-    description: "通過技能評級、獲取證書，打造你的職涯籌碼，讓你在就業市場上脫穎而出。",
+    description:
+      "通過技能評級、獲取證書，打造你的職涯籌碼，讓你在就業市場上脫穎而出。",
     icon: Trophy,
     buttons: [
       {
@@ -120,92 +138,98 @@ const infoCards: InfoCard[] = [
       },
     ],
   },
-]
+];
 
 export default function HomePage() {
-  const router = useRouter()
-  const { currentCourse, setCurrentCourse } = useCourse()
-  const [courses, setCourses] = useState<Course[]>([])
-  const [loading, setLoading] = useState(true)
-  const [firstFreeUnits, setFirstFreeUnits] = useState<Record<string, { chapterId: number; lessonId: number }>>({})
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
-  const [showLoginDialog, setShowLoginDialog] = useState(false)
-  const [loginReturnUrl, setLoginReturnUrl] = useState<string>("")
+  const router = useRouter();
+  const { currentCourse, setCurrentCourse } = useCourse();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [firstFreeUnits, setFirstFreeUnits] = useState<
+    Record<string, { chapterId: number; lessonId: number }>
+  >({});
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [loginReturnUrl, setLoginReturnUrl] = useState<string>("");
 
   // 從 API 獲取課程資料（使用 Journey API）
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const res = await fetch('/api/journeys')
+        const res = await fetch("/api/journeys");
         if (res.ok) {
-          const data = await res.json()
+          const data = await res.json();
           // 轉換 JourneyListItemDto 為 Course 格式
           const mappedCourses: Course[] = data.map((j: any) => ({
             id: j.id,
             name: j.name,
             slug: j.slug,
-            description: j.description || '',
+            description: j.description || "",
             thumbnailUrl: j.thumbnailUrl,
-            teacherName: j.teacherName || '水球潘',
+            teacherName: j.teacherName || "水球潘",
             priceTwd: j.priceTwd || 0,
             isOwned: j.isOwned ?? false, // 使用後端回傳的購買狀態
             hasFreePreview: true, // 假設所有課程都有免費試看
-          }))
-          setCourses(mappedCourses)
+          }));
+          setCourses(mappedCourses);
 
           // 為每個課程獲取第一個免費 lesson（包含 chapterId）
           mappedCourses.forEach(async (course: Course) => {
-            const chaptersRes = await fetch(`/api/journeys/${course.slug}/chapters`)
+            const chaptersRes = await fetch(
+              `/api/journeys/${course.slug}/chapters`
+            );
             if (chaptersRes.ok) {
-              const chapters = await chaptersRes.json()
+              const chapters = await chaptersRes.json();
               // 找到第一個非 premium 的 lesson
               for (const chapter of chapters) {
-                const freeLesson = chapter.lessons?.find((l: any) => !l.premiumOnly)
+                const freeLesson = chapter.lessons?.find(
+                  (l: any) => !l.premiumOnly
+                );
                 if (freeLesson) {
-                  setFirstFreeUnits(prev => ({
+                  setFirstFreeUnits((prev) => ({
                     ...prev,
                     [course.slug]: {
                       chapterId: chapter.id,
-                      lessonId: freeLesson.id
-                    }
-                  }))
-                  break
+                      lessonId: freeLesson.id,
+                    },
+                  }));
+                  break;
                 }
               }
             }
-          })
+          });
         }
       } catch (error) {
-        console.error('獲取課程資料失敗:', error)
+        console.error("獲取課程資料失敗:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchCourses()
-  }, [])
+    fetchCourses();
+  }, []);
 
   // 檢查登入狀態
   useEffect(() => {
     async function checkLoginStatus() {
       try {
-        const res = await fetch('/api/auth/me', {
-          credentials: 'include',
-        })
+        const res = await fetch("/api/auth/me", {
+          credentials: "include",
+        });
         if (res.ok) {
-          const data = await res.json()
-          setIsLoggedIn(!!data.user)
-          console.log('[HomePage] 登入狀態:', !!data.user)
+          const data = await res.json();
+          setIsLoggedIn(!!data.user);
+          console.log("[HomePage] 登入狀態:", !!data.user);
         }
       } catch (error) {
-        console.error('[HomePage] 檢查登入狀態失敗:', error)
-        setIsLoggedIn(false)
+        console.error("[HomePage] 檢查登入狀態失敗:", error);
+        setIsLoggedIn(false);
       }
     }
-    checkLoginStatus()
-  }, [])
+    checkLoginStatus();
+  }, []);
 
   // 判斷是否顯示提示條（只有軟體設計模式精通之旅才顯示）
-  const showPromoAlert = currentCourse?.slug === "software-design-pattern"
+  const showPromoAlert = currentCourse?.slug === "software-design-pattern";
 
   /**
    * 處理課程 card 點擊事件
@@ -217,59 +241,60 @@ export default function HomePage() {
       id: course.id,
       name: course.name,
       slug: course.slug,
-    })
-    console.log('[HomePage] 切換課程:', course.name)
-  }
+    });
+    console.log("[HomePage] 切換課程:", course.name);
+  };
 
   // 課程顯示設定（根據課程 slug）
   const getCourseDisplayConfig = (slug: string, isOwned: boolean = false) => {
     switch (slug) {
-      case 'software-design-pattern':
+      case "software-design-pattern":
         return {
-          image: '/images/course_0.png',
+          image: "/images/course_0.png",
           showPromo: !isOwned, // 已擁有時不顯示促銷
-          promoText: '看完課程介紹，立刻折價 3,000 元',
-          buttonText: isOwned ? '進入課程' : '立即體驗',
-          description: '用一趟旅程的時間，成為硬核的 Coding 實戰高手',
+          promoText: "看完課程介紹，立刻折價 3,000 元",
+          buttonText: isOwned ? "進入課程" : "立即體驗",
+          description: "用一趟旅程的時間，成為硬核的 Coding 實戰高手",
           firstChapterId: 8,
           firstLessonId: 8001,
-        }
-      case 'ai-bdd':
+        };
+      case "ai-bdd":
         return {
-          image: '/images/course_1.png',
+          image: "/images/course_1.png",
           showPromo: false,
-          promoText: '',
-          buttonText: isOwned ? '進入課程' : '立刻購買',
-          description: 'AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發',
+          promoText: "",
+          buttonText: isOwned ? "進入課程" : "立刻購買",
+          description: "AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發",
           firstChapterId: 4000,
           firstLessonId: 40001,
-        }
+        };
       // 舊的 slug 相容（以防萬一）
-      case 'ai-x-bdd':
+      case "ai-x-bdd":
         return {
-          image: '/images/course_1.png',
+          image: "/images/course_1.png",
           showPromo: false,
-          promoText: '',
-          buttonText: isOwned ? '進入課程' : '立刻購買',
-          description: 'AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發',
+          promoText: "",
+          buttonText: isOwned ? "進入課程" : "立刻購買",
+          description: "AI Top 1% 工程師必修課，掌握規格驅動的全自動化開發",
           firstChapterId: 4000,
           firstLessonId: 40001,
-        }
+        };
       default:
         return {
-          image: '/images/course_0.png',
+          image: "/images/course_0.png",
           showPromo: false,
-          promoText: '',
-          buttonText: isOwned ? '進入課程' : '立即體驗',
-          description: '',
+          promoText: "",
+          buttonText: isOwned ? "進入課程" : "立即體驗",
+          description: "",
           firstChapterId: 0,
           firstLessonId: 0,
-        }
+        };
     }
-  }
+  };
 
   // 軟體設計模式精通之旅的固定試聽課程連結
-  const SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL = '/journeys/software-design-pattern/chapters/8/missions/8001'
+  const SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL =
+    "/journeys/software-design-pattern/chapters/8/missions/8001";
 
   /**
    * 處理「進入課程」按鈕點擊
@@ -278,28 +303,34 @@ export default function HomePage() {
   const handleEnterCourseClick = async (course: Course, displayConfig: any) => {
     try {
       // 呼叫 last-watched API
-      const res = await fetch(`/api/journeys/${course.slug}/last-watched`)
+      const res = await fetch(`/api/journeys/${course.slug}/last-watched`);
 
       if (res.ok) {
-        const data = await res.json()
+        const data = await res.json();
 
         // 如果有最後觀看記錄，跳轉到該位置
         if (data && data.chapterId && data.lessonId) {
-          console.log('[HomePage] 跳轉到最後觀看位置:', data)
-          router.push(`/journeys/${course.slug}/chapters/${data.chapterId}/missions/${data.lessonId}`)
-          return
+          console.log("[HomePage] 跳轉到最後觀看位置:", data);
+          router.push(
+            `/journeys/${course.slug}/chapters/${data.chapterId}/missions/${data.lessonId}`
+          );
+          return;
         }
       }
 
       // 沒有最後觀看記錄或 API 失敗，跳轉到第一個單元
-      console.log('[HomePage] 無最後觀看記錄，跳轉到第一個單元')
-      router.push(`/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+      console.log("[HomePage] 無最後觀看記錄，跳轉到第一個單元");
+      router.push(
+        `/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`
+      );
     } catch (error) {
-      console.error('[HomePage] 取得最後觀看位置失敗:', error)
+      console.error("[HomePage] 取得最後觀看位置失敗:", error);
       // 發生錯誤時，跳轉到第一個單元
-      router.push(`/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`)
+      router.push(
+        `/journeys/${course.slug}/chapters/${displayConfig.firstChapterId}/missions/${displayConfig.firstLessonId}`
+      );
     }
-  }
+  };
 
   /**
    * 處理課程按鈕點擊（進入課程、試聽課程或購買課程）
@@ -308,55 +339,56 @@ export default function HomePage() {
    * - 如果是「立即體驗」，檢查登入狀態後導向試看頁面
    */
   const handleCourseButtonClick = (course: Course, displayConfig: any) => {
-    console.log('[HomePage] 點擊課程按鈕:', {
+    console.log("[HomePage] 點擊課程按鈕:", {
       courseSlug: course.slug,
       buttonText: displayConfig.buttonText,
       isLoggedIn,
       isOwned: course.isOwned,
-    })
+    });
 
     // 如果是「進入課程」（已擁有），呼叫 last-watched API 後跳轉
-    if (displayConfig.buttonText === '進入課程') {
-      handleEnterCourseClick(course, displayConfig)
-      return
+    if (displayConfig.buttonText === "進入課程") {
+      handleEnterCourseClick(course, displayConfig);
+      return;
     }
 
     // 如果是「立刻購買」，直接導向訂單頁面（未登入也可以訪問）
-    if (displayConfig.buttonText === '立刻購買') {
-      const targetUrl = `/journeys/${course.slug}/orders?productId=${course.id}`
-      console.log('[HomePage] 導向訂單頁面:', targetUrl)
-      router.push(targetUrl)
-      return
+    if (displayConfig.buttonText === "立刻購買") {
+      const targetUrl = `/journeys/${course.slug}/orders?productId=${course.id}`;
+      console.log("[HomePage] 導向訂單頁面:", targetUrl);
+      router.push(targetUrl);
+      return;
     }
 
     // 其他情況（立即體驗）：決定目標 URL
     // 軟體設計模式精通之旅使用固定的試聽課程連結
-    const targetUrl = course.slug === 'software-design-pattern'
-      ? SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL
-      : `/journeys/${course.slug}`
+    const targetUrl =
+      course.slug === "software-design-pattern"
+        ? SOFTWARE_DESIGN_PATTERN_FREE_PREVIEW_URL
+        : `/journeys/${course.slug}`;
 
-    console.log('[HomePage] 目標 URL:', targetUrl)
+    console.log("[HomePage] 目標 URL:", targetUrl);
 
     // 如果未登入，顯示登入對話框
     if (!isLoggedIn) {
-      console.log('[HomePage] 未登入，顯示登入對話框')
-      setLoginReturnUrl(targetUrl)
-      setShowLoginDialog(true)
-      return
+      console.log("[HomePage] 未登入，顯示登入對話框");
+      setLoginReturnUrl(targetUrl);
+      setShowLoginDialog(true);
+      return;
     }
 
     // 如果已登入，直接導向
-    console.log('[HomePage] 已登入，導向目標頁面')
-    router.push(targetUrl)
-  }
+    console.log("[HomePage] 已登入，導向目標頁面");
+    router.push(targetUrl);
+  };
 
   /**
    * 處理登入對話框的「前往登入」按鈕
    */
   const handleLoginClick = () => {
-    console.log('[HomePage] 導向登入頁，returnUrl:', loginReturnUrl)
-    router.push(`/login?returnUrl=${encodeURIComponent(loginReturnUrl)}`)
-  }
+    console.log("[HomePage] 導向登入頁，returnUrl:", loginReturnUrl);
+    router.push(`/login?returnUrl=${encodeURIComponent(loginReturnUrl)}`);
+  };
 
   return (
     <div className="flex flex-col bg-gradient-to-b from-muted/30 to-background">
@@ -364,26 +396,7 @@ export default function HomePage() {
       <section className="w-full">
         <div className="container px-6 py-12 md:py-16">
           {/* 提示條（僅軟體設計模式精通之旅顯示）*/}
-          {showPromoAlert && (
-            <Alert className="flex items-center justify-between gap-4 mb-6 bg-primary/5 border-primary/20">
-              <Link
-                href="/journeys/software-design-pattern/chapters/8/missions/8001"
-                className="flex-1 mb-0 text-foreground underline cursor-pointer"
-              >
-                將軟體設計精通之旅體驗課程的全部影片看完就可以獲得 3000 元課程折價券！
-              </Link>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white flex-shrink-0"
-              >
-                <Link href="/journeys/software-design-pattern/chapters/8/missions/8001" className="inline-flex items-center justify-center w-full h-full">
-                  前往
-                </Link>
-              </Button>
-            </Alert>
-          )}
+          {showPromoAlert && <CourseDiscountAlert />}
 
           <Card className="border-2">
             <CardHeader className="pb-8">
@@ -391,22 +404,30 @@ export default function HomePage() {
                 歡迎來到水球軟體學院
               </CardTitle>
               <CardDescription className="text-base md:text-lg">
-                水球軟體學院提供最先進的軟體設計思路教材，並透過線上 Code Review 來帶你掌握進階軟體架構能力。
-                只要每週投資 5 小時，就能打造不平等的優勢，成為硬核的 Coding 實戰高手。
+                水球軟體學院提供最先進的軟體設計思路教材，並透過線上 Code Review
+                來帶你掌握進階軟體架構能力。 只要每週投資 5
+                小時，就能打造不平等的優勢，成為硬核的 Coding 實戰高手。
               </CardDescription>
             </CardHeader>
 
             {/* 兩個主要課程 */}
             <CardContent>
               {loading ? (
-                <div className="text-center py-12 text-muted-foreground">載入中...</div>
+                <div className="text-center py-12 text-muted-foreground">
+                  載入中...
+                </div>
               ) : courses.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">目前尚無可用課程</div>
+                <div className="text-center py-12 text-muted-foreground">
+                  目前尚無可用課程
+                </div>
               ) : (
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   {courses.map((course) => {
-                    const displayConfig = getCourseDisplayConfig(course.slug, course.isOwned)
-                    const isSelected = currentCourse?.slug === course.slug
+                    const displayConfig = getCourseDisplayConfig(
+                      course.slug,
+                      course.isOwned
+                    );
+                    const isSelected = currentCourse?.slug === course.slug;
 
                     return (
                       <Card
@@ -414,14 +435,18 @@ export default function HomePage() {
                         onClick={() => handleCourseCardClick(course)}
                         className={`flex flex-col overflow-hidden transition-all duration-300 cursor-pointer hover:scale-105 bg-card ${
                           isSelected
-                            ? 'border-2 border-yellow-600 shadow-lg'
-                            : 'border-2 border-muted/50 hover:border-yellow-600/50'
+                            ? "border-2 border-yellow-600 shadow-lg"
+                            : "border-2 border-muted/50 hover:border-yellow-600/50"
                         }`}
                       >
                         {/* 課程封面圖 */}
                         <div className="relative w-full h-48">
                           <Image
-                            src={course.thumbnailUrl ? `/${course.thumbnailUrl}` : displayConfig.image}
+                            src={
+                              course.thumbnailUrl
+                                ? `/${course.thumbnailUrl}`
+                                : displayConfig.image
+                            }
                             alt={course.name}
                             fill
                             className="object-cover"
@@ -430,14 +455,18 @@ export default function HomePage() {
                         </div>
 
                         <CardHeader>
-                          <CardTitle className="text-xl">{course.name}</CardTitle>
+                          <CardTitle className="text-xl">
+                            {course.name}
+                          </CardTitle>
                           <CardDescription className="text-lg font-semibold text-yellow-600 dark:text-yellow-500">
-                            {course.teacherName || '水球潘'}
+                            {course.teacherName || "水球潘"}
                           </CardDescription>
                         </CardHeader>
 
                         <CardContent>
-                          <p className="text-sm text-muted-foreground">{displayConfig.description || course.description}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {displayConfig.description || course.description}
+                          </p>
                         </CardContent>
 
                         <CardFooter className="mt-auto flex flex-col gap-2">
@@ -449,22 +478,22 @@ export default function HomePage() {
                           )}
                           <Button
                             onClick={(e) => {
-                              e.stopPropagation() // 防止觸發卡片的點擊事件
-                              handleCourseButtonClick(course, displayConfig)
+                              e.stopPropagation(); // 防止觸發卡片的點擊事件
+                              handleCourseButtonClick(course, displayConfig);
                             }}
                             className={
                               isSelected
-                                ? 'w-full border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent'
-                                : 'w-full bg-yellow-600 hover:bg-yellow-700 text-black'
+                                ? "w-full border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white bg-transparent"
+                                : "w-full bg-yellow-600 hover:bg-yellow-700 text-black"
                             }
                             size="lg"
-                            variant={isSelected ? 'outline' : 'default'}
+                            variant={isSelected ? "outline" : "default"}
                           >
                             {displayConfig.buttonText}
                           </Button>
                         </CardFooter>
                       </Card>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -478,9 +507,12 @@ export default function HomePage() {
         <div className="container px-6">
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 max-w-6xl mx-auto">
             {infoCards.map((card) => {
-              const Icon = card.icon
+              const Icon = card.icon;
               return (
-                <Card key={card.id} className="flex flex-col bg-background border-border/50">
+                <Card
+                  key={card.id}
+                  className="flex flex-col bg-background border-border/50"
+                >
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-lg flex-shrink-0">
@@ -488,14 +520,24 @@ export default function HomePage() {
                       </div>
                       <CardTitle className="text-lg">{card.title}</CardTitle>
                     </div>
-                    <CardDescription className="text-sm">{card.description}</CardDescription>
+                    <CardDescription className="text-sm">
+                      {card.description}
+                    </CardDescription>
                   </CardHeader>
-                  <CardFooter className={`mt-auto gap-2 items-start ${card.buttons.length > 1 ? 'flex flex-row flex-wrap' : 'flex flex-col'}`}>
+                  <CardFooter
+                    className={`mt-auto gap-2 items-start ${
+                      card.buttons.length > 1
+                        ? "flex flex-row flex-wrap"
+                        : "flex flex-col"
+                    }`}
+                  >
                     {card.buttons.map((button, index) => (
                       <Button
                         key={index}
                         asChild
-                        variant={button.variant === "outline" ? "outline" : "default"}
+                        variant={
+                          button.variant === "outline" ? "outline" : "default"
+                        }
                         className={
                           button.variant === "outline"
                             ? "border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
@@ -526,7 +568,7 @@ export default function HomePage() {
                     ))}
                   </CardFooter>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -554,7 +596,8 @@ export default function HomePage() {
                 <div className="flex flex-col gap-6">
                   <h2 className="text-2xl md:text-3xl font-bold">水球潘</h2>
                   <p className="text-muted-foreground">
-                    七年程式教育者 & 軟體設計學講師，致力於將複雜的軟體設計概念轉化為易於理解和實踐的教學內容。
+                    七年程式教育者 &
+                    軟體設計學講師，致力於將複雜的軟體設計概念轉化為易於理解和實踐的教學內容。
                   </p>
 
                   {/* Bullet points with checkmark icons */}
@@ -563,25 +606,36 @@ export default function HomePage() {
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center">
                         <Check className="h-4 w-4 text-black" />
                       </div>
-                      <p className="text-sm">主修 Christopher Alexander 設計模式、軟體架構、分散式系統架構、Clean Architecture、領域驅動設計等領域</p>
+                      <p className="text-sm">
+                        主修 Christopher Alexander
+                        設計模式、軟體架構、分散式系統架構、Clean
+                        Architecture、領域驅動設計等領域
+                      </p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center">
                         <Check className="h-4 w-4 text-black" />
                       </div>
-                      <p className="text-sm">過去 40 多場 Talk 平均 93 位觀眾參與</p>
+                      <p className="text-sm">
+                        過去 40 多場 Talk 平均 93 位觀眾參與
+                      </p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center">
                         <Check className="h-4 w-4 text-black" />
                       </div>
-                      <p className="text-sm">主辦的學院社群一年內成長超過 6000 位成員</p>
+                      <p className="text-sm">
+                        主辦的學院社群一年內成長超過 6000 位成員
+                      </p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center">
                         <Check className="h-4 w-4 text-black" />
                       </div>
-                      <p className="text-sm">帶領軟體工程方法論學習組織「GaaS」超過 200 多位成員，引領 30 組自組織團隊</p>
+                      <p className="text-sm">
+                        帶領軟體工程方法論學習組織「GaaS」超過 200
+                        多位成員，引領 30 組自組織團隊
+                      </p>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 flex items-center justify-center">
@@ -609,7 +663,9 @@ export default function HomePage() {
           </button>
 
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">請先登入</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold">
+              請先登入
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
               完成登入並擁有完整課程影片，就可以立即觀課程囉！
             </AlertDialogDescription>
@@ -627,5 +683,5 @@ export default function HomePage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
