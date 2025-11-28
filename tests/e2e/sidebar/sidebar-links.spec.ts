@@ -257,6 +257,11 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('[Given] 已登入');
       await devLogin(page, 'seed_test_001');
 
+      // And: 先導航到首頁（確保 sidebar 顯示基本連結）
+      console.log('[And] 導航到首頁');
+      await page.goto('/');
+      await page.waitForLoadState('load');
+
       // And: 定義所有要測試的連結和其對應的 URL
       console.log('[And] 定義要測試的連結');
       const linksToTest = [
@@ -281,18 +286,20 @@ test.describe('Sidebar: 導航連結驗證', () => {
       console.log('[When/Then] 測試每個連結的導航');
       for (const linkTest of linksToTest) {
         console.log(`\n測試連結: ${linkTest.label}`);
+
+        // 在每次測試前先回到首頁
+        await page.goto('/');
+        await page.waitForLoadState('load');
+
         const link = page.locator(`[data-testid="${linkTest.testid}"]`);
 
-        try {
-          await expect(link).toBeVisible({ timeout: 5000 });
-          await link.click();
-          await page.waitForLoadState('load');
+        // 真正的測試 - 不使用 try-catch，讓測試失敗時能被發現
+        await expect(link).toBeVisible({ timeout: 5000 });
+        await link.click();
+        await page.waitForLoadState('load');
 
-          expect(page.url()).toContain(linkTest.expectedUrl);
-          console.log(`✅ ${linkTest.label} 連結正確指向 ${linkTest.expectedUrl}`);
-        } catch (error) {
-          console.warn(`⚠️ ${linkTest.label} 連結測試失敗: ${error}`);
-        }
+        expect(page.url()).toContain(linkTest.expectedUrl);
+        console.log(`✅ ${linkTest.label} 連結正確指向 ${linkTest.expectedUrl}`);
       }
 
       console.log('\n[Test] ✅ 所有主要連結導航測試完成');
