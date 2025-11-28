@@ -268,7 +268,7 @@ test.describe('Sidebar: 導航連結驗證', () => {
         {
           testid: 'sidebar-nav-journeys',
           expectedUrl: '/journeys',
-          label: '課程',
+          label: '所有單元',  // 修正：/journeys 對應的是「所有單元」
         },
         {
           testid: 'sidebar-nav-leaderboard',
@@ -296,6 +296,9 @@ test.describe('Sidebar: 導航連結驗證', () => {
         // 真正的測試 - 不使用 try-catch，讓測試失敗時能被發現
         await expect(link).toBeVisible({ timeout: 5000 });
         await link.click();
+
+        // 等待 URL 變更到目標頁面
+        await page.waitForURL(`**${linkTest.expectedUrl}`, { timeout: 10000 });
         await page.waitForLoadState('load');
 
         expect(page.url()).toContain(linkTest.expectedUrl);
